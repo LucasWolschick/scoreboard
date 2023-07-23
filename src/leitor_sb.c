@@ -197,7 +197,7 @@ token prox_token_r(scanner *s)
         return scanner_faz_token(s, TOKEN_PAREN_DIR);
 
     case '-':
-        return scanner_faz_token(s, TOKEN_PAREN_DIR);
+        return scanner_faz_token(s, TOKEN_MENOS);
 
     case ',':
         return scanner_faz_token(s, TOKEN_VIRGULA);
@@ -384,6 +384,56 @@ void configuracao(scanner *s)
         c.ck_div);
 }
 
+void instrucao(scanner *s)
+{
+    token opcode = espera_token(s, TOKEN_NOME);
+
+    if (compara_token(opcode, "ld"))
+    {
+        // formato ld f1 (num)f3
+        token dest = espera_token(s, TOKEN_NOME);
+        espera_token(s, TOKEN_PAREN_ESQ);
+
+        int negativo = 1;
+        if (ve_token(s).tipo == TOKEN_MENOS)
+        {
+            // negativo
+            prox_token(s);
+            negativo = -1;
+        }
+
+        token num = espera_token(s, TOKEN_NUMERO);
+        espera_token(s, TOKEN_PAREN_DIR);
+        token base = espera_token(s, TOKEN_NOME);
+
+        printf("OP: ");
+        token_print(opcode);
+        printf(" DEST: ");
+        token_print(dest);
+        printf(" OFFSET: %d", negativo * num.valor);
+        printf(" BASE: ");
+        token_print(base);
+        puts("");
+    }
+    else
+    {
+        // formato 3 ops
+        token op1 = espera_token(s, TOKEN_NOME);
+        token op2 = espera_token(s, TOKEN_NOME);
+        token op3 = espera_token(s, TOKEN_NOME);
+
+        printf("OP: ");
+        token_print(opcode);
+        printf(" I: ");
+        token_print(op1);
+        printf(" J: ");
+        token_print(op2);
+        printf(" K: ");
+        token_print(op3);
+        puts("");
+    }
+}
+
 void le_sb(char *src, char *fim)
 {
     scanner s;
@@ -398,16 +448,19 @@ void le_sb(char *src, char *fim)
     bool pronto = false;
     while (!pronto)
     {
-        token t = prox_token(&s);
+        token t = ve_token(&s);
         switch (t.tipo)
         {
         case TOKEN_PORCENTO:
+            prox_token(&s);
             configuracao(&s);
-        // case TOKEN_NOME:
-        //  instrucao(&s);
-        // case TOKEN_EOF:
-        //     pronto = true;
-        //     break;
+            break;
+        case TOKEN_NOME:
+            instrucao(&s);
+            break;
+        case TOKEN_EOF:
+            pronto = true;
+            break;
         default:
             printf("eu encontrei algo que nao conheco!");
             exit(1);

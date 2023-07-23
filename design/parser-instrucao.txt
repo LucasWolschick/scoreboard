@@ -1,0 +1,35 @@
+lw     $t0, 4($gp)       # fetch N
+mult   $t0, $t0, $t0     # N*N
+lw     $t1, 4($gp)       # fetch N
+ori    $t2, $zero, 3     # 3
+mult   $t1, $t1, $t2     # 3*N
+add    $t2, $t0, $t1     # N*N + 3*N
+sw     $t2, 0($gp)       # i = ...
+
+Gramática:
+
+    line -> [label]* [instrucao] [comentario] "\n"
+
+    label -> identifier ":"
+
+    instrucao -> inst_3 | inst_2 | inst_1 | inst_2_op_ind | inst_3_imm
+
+    inst_3 -> opcode reg "," reg "," reg
+    inst_2 -> opcode reg "," reg
+    inst_1 -> opcode reg
+    inst_2_op_ind -> opcode reg "," imm "(" reg ")"
+    inst_3_imm -> opcode reg "," reg "," imm
+
+    comentario -> "#" .*
+
+    reg -> "$" [0-9]+ 
+
+    num -> ("-"? decimalInt) | hexadecimalInt
+
+    decimalInt -> [0-9]+
+
+    hexadecimalInt -> 0x[0-9A-Fa-f]+
+
+    opcode -> identifier
+
+    identifier -> [a-zA-Z][a-zA-Z0-9_]*

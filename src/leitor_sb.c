@@ -53,6 +53,7 @@ token scanner_faz_token(scanner *s, token_tipo tipo)
     t.tipo = tipo;
     t.comp = (int)(s->atual - s->inicio);
     t.inicio = s->inicio;
+    t.valor = -1;
     return t;
 }
 
@@ -62,6 +63,7 @@ token scanner_faz_erro(scanner *s)
     t.tipo = TOKEN_ERRO;
     t.comp = 0;
     t.inicio = "";
+    t.valor = -1;
     fprintf(stderr, "ERRO!\n");
     return t;
 }
@@ -144,7 +146,20 @@ token scanner_numero(scanner *s)
         }
     }
 
-    return scanner_faz_token(s, TOKEN_NUMERO);
+    token t = scanner_faz_token(s, TOKEN_NUMERO);
+
+    char *buf = malloc(sizeof(char) * (t.comp + 1));
+    for (int i = 0; i < t.comp; i++)
+    {
+        buf[i] = t.inicio[i];
+    }
+    buf[t.comp] = '\0';
+    int numero;
+    sscanf(buf, " %i", &numero);
+    t.valor = numero;
+    free(buf);
+
+    return t;
 }
 
 token scanner_identificador(scanner *s)
@@ -188,13 +203,10 @@ token prox_token_r(scanner *s)
         return scanner_faz_token(s, TOKEN_VIRGULA);
 
     // espaço em branco
-    case '\r':
     case '\n':
-        scanner_avanca_espaco(s);
-        return scanner_faz_token(s, TOKEN_LINHA);
     case '\t':
+    case '\r':
     case ' ':
-        scanner_avanca_espaco(s);
         return prox_token_r(s);
 
     // comentário
@@ -268,54 +280,71 @@ bool compara_token(token t, char *str)
         {
             return false;
         }
+        i++;
     }
     return str[i] == '\0' && t.comp == i;
 }
 
-void linha_configuracao(scanner *s, config *c)
+// configuracao -> bloco*
+// bloco -> UF \n atrib_uf | INST \n atrib_inst
+// atrib_uf -> NOME ":" NUMERO \n [atrib_uf]
+// atrib_inst -> NOME ":" NUMERO \n [atrib_inst]
+
+void atrib_uf(scanner *s, config *c)
 {
-    // cabeçalho (UF ou INST)
-    // declaracoes (NOME : numero)
-    // linha em branco
+    token nome = espera_token(s, TOKEN_NOME);
+    espera_token(s, TOKEN_DOIS_PONTOS);
+    token valor = espera_token(s, TOKEN_NUMERO);
 
-    token t = prox_token(s);
-    if (t.tipo == TOKEN_NOME)
+    if (compara_token(nome, "add"))
+        c->n_uf_add = valor.valor;
+    else if (compara_token(nome, "mul"))
+        c->n_uf_mul = valor.valor;
+    else if (compara_token(nome, "int"))
+        c->n_uf_int = valor.valor;
+}
+
+void atrib_inst(scanner *s, config *c)
+{
+    token nome = espera_token(s, TOKEN_NOME);
+    espera_token(s, TOKEN_DOIS_PONTOS);
+    token valor = espera_token(s, TOKEN_NUMERO);
+
+    if (compara_token(nome, "ld"))
+        c->ck_ld = valor.valor;
+    else if (compara_token(nome, "mul"))
+        c->ck_mul = valor.valor;
+    else if (compara_token(nome, "add"))
+        c->ck_add = valor.valor;
+    else if (compara_token(nome, "sub"))
+        c->ck_sub = valor.valor;
+    else if (compara_token(nome, "div"))
+        c->ck_div = valor.valor;
+}
+
+void bloco_configuracao(scanner *s, config *c)
+{
+    token nome_bloco = espera_token(s, TOKEN_NOME);
+    if (compara_token(nome_bloco, "UF"))
     {
-        token p = ve_token(s);
-        if (p.tipo == TOKEN_DOIS_PONTOS)
+        token teste;
+        while ((((teste = ve_token(s))).tipo == TOKEN_NOME) && (!compara_token(teste, "UF") && (!compara_token(teste, "INST"))))
         {
-            prox_token(s);
-
-            // aí a gente tem uma declaracao
-            token n = espera_token(s, TOKEN_NUMERO);
-
-            printf("declaracao: ");
-            token_print(t);
-            printf(" seta para ");
-            token_print(n);
-            printf("\n");
+            atrib_uf(s, c);
         }
-        else
-        {
-            // so cabeçalho
-            printf("cabecalho: ");
-            token_print(t);
-            printf("\n");
-        }
-
-        // finaliza linha
-        espera_token(s, TOKEN_LINHA);
     }
-    else if (t.tipo == TOKEN_LINHA)
+    else if (compara_token(nome_bloco, "INST"))
     {
-        // ignora
-        puts("linha em branco");
+        token teste;
+        while ((((teste = ve_token(s))).tipo == TOKEN_NOME) && (!compara_token(teste, "UF") && (!compara_token(teste, "INST"))))
+        {
+            atrib_inst(s, c);
+        }
     }
     else
     {
-        puts("outra coisa");
-        // erro na sintaxe
-        printf("erro na sintaxe, esperava definicao\n");
+        printf("Erro na sintaxe, esperava bloco\n");
+        exit(1);
     }
 }
 
@@ -326,7 +355,7 @@ void configuracao(scanner *s)
     token t;
     while ((t = ve_token(s)).tipo != TOKEN_PORCENTO)
     {
-        linha_configuracao(s, &c);
+        bloco_configuracao(s, &c);
         if (ve_token(s).tipo == TOKEN_EOF)
         {
             printf("Esperava fechamento do comentario de configuracao\n");
@@ -334,6 +363,25 @@ void configuracao(scanner *s)
         }
     };
     espera_token(s, TOKEN_PORCENTO);
+
+    printf(
+        "marcos \n"
+        "n_uf_add: %d\n"
+        "n_uf_mul: %d\n"
+        "n_uf_int: %d\n"
+        "ck_ld: %d\n"
+        "ck_mul: %d\n"
+        "ck_add: %d\n"
+        "ck_sub: %d\n"
+        "ck_div: %d\n",
+        c.n_uf_add,
+        c.n_uf_mul,
+        c.n_uf_int,
+        c.ck_ld,
+        c.ck_mul,
+        c.ck_add,
+        c.ck_sub,
+        c.ck_div);
 }
 
 void le_sb(char *src, char *fim)
@@ -347,19 +395,21 @@ void le_sb(char *src, char *fim)
     // comentário de configuração -> %
     // instrução
 
-    for (;;)
+    bool pronto = false;
+    while (!pronto)
     {
         token t = prox_token(&s);
         switch (t.tipo)
         {
         case TOKEN_PORCENTO:
-        {
-            // ler a configuração
             configuracao(&s);
-            break;
-        }
+        // case TOKEN_NOME:
+        //  instrucao(&s);
+        // case TOKEN_EOF:
+        //     pronto = true;
+        //     break;
         default:
-            printf("o que!!");
+            printf("eu encontrei algo que nao conheco!");
             exit(1);
         }
     }

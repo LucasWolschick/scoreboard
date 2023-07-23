@@ -1,13 +1,13 @@
 %
     UF
-    add : 5
-    mul : 50
+    add:5
+    mul:50
     INST
-    add : 3
-    mult : 50
+    add:3
+    mul:50
 %
 ld F6 (-5)F5
 add F6 F7 F8
 sub F4 F5 F9
-#mul F123 F0 F9
+div F123 F0 F9
 add F6 F6 F6 # oi

@@ -4,7 +4,6 @@
 enum token_tipo
 {
     // um caractere
-    TOKEN_LINHA,
     TOKEN_DOIS_PONTOS,
     TOKEN_PORCENTO,
     TOKEN_VIRGULA,
@@ -27,6 +26,7 @@ struct token
     token_tipo tipo;
     int comp;
     const char *inicio;
+    int valor;
 };
 typedef struct token token;
 

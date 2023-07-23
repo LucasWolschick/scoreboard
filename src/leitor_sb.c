@@ -157,7 +157,7 @@ token scanner_identificador(scanner *s)
     return scanner_faz_token(s, TOKEN_NOME);
 }
 
-token prox_token(scanner *s)
+token prox_token_r(scanner *s)
 {
     s->inicio = s->atual;
     if (s->atual >= s->fim)
@@ -188,21 +188,21 @@ token prox_token(scanner *s)
         return scanner_faz_token(s, TOKEN_VIRGULA);
 
     // espaço em branco
+    case '\r':
     case '\n':
         scanner_avanca_espaco(s);
         return scanner_faz_token(s, TOKEN_LINHA);
-    case '\r':
     case '\t':
     case ' ':
         scanner_avanca_espaco(s);
-        return prox_token(s);
+        return prox_token_r(s);
 
     // comentário
     case '#':
         while ((ch = scanner_avancar(s)) && ch != '\n')
         {
         }
-        return prox_token(s);
+        return prox_token_r(s);
 
     default:
     {
@@ -224,21 +224,148 @@ token prox_token(scanner *s)
     }
 }
 
-void tokeniza(char *src, char *fim)
+void token_print(token t)
+{
+    printf("tipo: %d token: ", t.tipo);
+    fwrite(t.inicio, sizeof(char), t.comp, stdout);
+}
+
+token prox_token(scanner *s)
+{
+    token t = prox_token_r(s);
+    return t;
+}
+
+token ve_token(scanner *s)
+{
+    scanner copia = *s;
+    return prox_token(&copia);
+}
+
+token espera_token(scanner *s, token_tipo tipo)
+{
+    token t = ve_token(s);
+    if (t.tipo != tipo)
+    {
+        printf("Ta errado! Esperava %d, obtive ", tipo);
+        token_print(t);
+        printf("\n");
+        exit(1);
+    }
+    return prox_token(s);
+}
+
+//   t: abcX (comp = 3)
+// str: abc\0
+//         i
+
+bool compara_token(token t, char *str)
+{
+    int i = 0;
+    while (i < t.comp && str[i] != '\0')
+    {
+        if (t.inicio[i] != str[i])
+        {
+            return false;
+        }
+    }
+    return str[i] == '\0' && t.comp == i;
+}
+
+void linha_configuracao(scanner *s, config *c)
+{
+    // cabeçalho (UF ou INST)
+    // declaracoes (NOME : numero)
+    // linha em branco
+
+    token t = prox_token(s);
+    if (t.tipo == TOKEN_NOME)
+    {
+        token p = ve_token(s);
+        if (p.tipo == TOKEN_DOIS_PONTOS)
+        {
+            prox_token(s);
+
+            // aí a gente tem uma declaracao
+            token n = espera_token(s, TOKEN_NUMERO);
+
+            printf("declaracao: ");
+            token_print(t);
+            printf(" seta para ");
+            token_print(n);
+            printf("\n");
+        }
+        else
+        {
+            // so cabeçalho
+            printf("cabecalho: ");
+            token_print(t);
+            printf("\n");
+        }
+
+        // finaliza linha
+        espera_token(s, TOKEN_LINHA);
+    }
+    else if (t.tipo == TOKEN_LINHA)
+    {
+        // ignora
+        puts("linha em branco");
+    }
+    else
+    {
+        puts("outra coisa");
+        // erro na sintaxe
+        printf("erro na sintaxe, esperava definicao\n");
+    }
+}
+
+void configuracao(scanner *s)
+{
+    config c = {0};
+
+    token t;
+    while ((t = ve_token(s)).tipo != TOKEN_PORCENTO)
+    {
+        linha_configuracao(s, &c);
+        if (ve_token(s).tipo == TOKEN_EOF)
+        {
+            printf("Esperava fechamento do comentario de configuracao\n");
+            exit(1);
+        }
+    };
+    espera_token(s, TOKEN_PORCENTO);
+}
+
+void le_sb(char *src, char *fim)
 {
     scanner s;
     s.atual = src;
     s.fim = fim;
     s.inicio = src;
 
+    // arquivo:
+    // comentário de configuração -> %
+    // instrução
+
     for (;;)
     {
         token t = prox_token(&s);
-        if (t.tipo == TOKEN_EOF || t.tipo == TOKEN_ERRO)
+        switch (t.tipo)
         {
+        case TOKEN_PORCENTO:
+        {
+            // ler a configuração
+            configuracao(&s);
             break;
+        }
+        default:
+            printf("o que!!");
+            exit(1);
         }
     }
 }
 
 // [PORCENTO, IDENT (add), DOIS_PONTOS, NUM (5), IDENT (mul), DOIS PONTOS, NUM (50), ..., PORCENTO]
+
+// % UF add : 5 ....
+//      ^--

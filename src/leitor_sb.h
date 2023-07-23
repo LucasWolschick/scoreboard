@@ -38,7 +38,24 @@ struct scanner
 };
 typedef struct scanner scanner;
 
+struct config
+{
+    // num de unidades funcionais
+    int n_uf_add;
+    int n_uf_mul;
+    int n_uf_int;
+
+    // ciclos por instrucao
+    int ck_ld;
+    int ck_mul;
+    int ck_add;
+    int ck_sub;
+    int ck_div;
+};
+typedef struct config config;
+
 char *arquivo_para_string(char caminho[]);
 void tokeniza(char *src, char *fim);
+void le_sb(char *src, char *fim);
 
 #endif

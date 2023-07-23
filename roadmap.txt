@@ -1,0 +1,38 @@
+- ler o arquivo sb
+	- parser do comentário-config
+	- parser do asm
+	- converter pra um formato intermediário fácil de mexer em C
+	- código auxiliar de abrir e fechar o arquivo
+
+- execução
+	- instruções:
+		- operação
+		- op i (dest)
+		- op j (op1)
+		- op k (op2)
+	- pipeline:
+		- busca "implementar" -> não aparece na tabela
+		- emissão
+		- carrega operandos
+		- execução
+		- escrita de resultados
+	- scoreboard
+		- estado das UFs
+			- op
+			- fi
+			- fj, fk
+			- qj, qk
+			- rj, rk
+			- busy
+		- estado dos registradores
+			- qual uf vai produzir
+		- estado das instruções
+			- E, LO, Ex, Er
+	- UFs
+		- stub
+	- BRs
+		- stub
+	- implementar bookkeeping
+		- algoritmo na web
+
+- printar as tabelas

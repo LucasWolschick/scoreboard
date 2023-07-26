@@ -1,11 +1,5 @@
 #include "leitor_sb.h"
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-
 /*
  * Recebe um caminho e carrega os conteúdos do arquivo deste caminho para um
  * buffer string. Retorna um ponteiro para esse buffer ou NULL caso a operação
@@ -54,6 +48,7 @@ token scanner_faz_token(scanner *s, token_tipo tipo)
     t.comp = (int)(s->atual - s->inicio);
     t.inicio = s->inicio;
     t.valor = -1;
+    t.linha = s->linha;
     return t;
 }
 
@@ -64,7 +59,7 @@ token scanner_faz_erro(scanner *s)
     t.comp = 0;
     t.inicio = "";
     t.valor = -1;
-    fprintf(stderr, "ERRO!\n");
+    t.linha = s->linha;
     return t;
 }
 
@@ -76,6 +71,8 @@ char scanner_avancar(scanner *s)
     }
 
     char ch = *(s->atual++);
+    if (ch == '\n')
+        s->linha++;
     return ch;
 }
 
@@ -87,26 +84,6 @@ char scanner_ver(scanner *s)
     }
 
     return *s->atual;
-}
-
-char eh_numerico(char ch)
-{
-    return '0' <= ch && ch <= '9';
-}
-
-char eh_hex(char ch)
-{
-    return ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F');
-}
-
-char eh_alfabetico(char ch)
-{
-    return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
-}
-
-char eh_alfanumerico(char ch)
-{
-    return eh_alfabetico(ch) || eh_numerico(ch) || ch == '_';
 }
 
 void scanner_avanca_espaco(scanner *s)
@@ -128,19 +105,19 @@ token scanner_numero(scanner *s)
 
         // o próximo tem que ser número
         ch = scanner_avancar(s);
-        if (!eh_hex(ch))
+        if (!isxdigit(ch))
         {
             scanner_faz_erro(s);
         }
 
-        while (eh_hex(scanner_ver(s)))
+        while (isxdigit(scanner_ver(s)))
         {
             scanner_avancar(s);
         }
     }
     else
     {
-        while (eh_numerico(scanner_ver(s)))
+        while (isdigit(scanner_ver(s)))
         {
             scanner_avancar(s);
         }
@@ -164,12 +141,67 @@ token scanner_numero(scanner *s)
 
 token scanner_identificador(scanner *s)
 {
-    while (eh_alfanumerico(scanner_ver(s)))
+    while (isalnum(scanner_ver(s)))
     {
         scanner_avancar(s);
     }
 
     return scanner_faz_token(s, TOKEN_NOME);
+}
+
+token scanner_registrador(scanner *s)
+{
+    while (isdigit(scanner_ver(s)))
+    {
+        scanner_avancar(s);
+    }
+
+    token t = scanner_faz_token(s, TOKEN_REGISTRADOR);
+
+    char *buf = malloc(sizeof(char) * (t.comp + 1 - 1));
+    // pulamos o 'r'
+    for (int i = 1; i < t.comp; i++)
+    {
+        buf[i - 1] = t.inicio[i];
+    }
+    buf[t.comp - 1] = '\0';
+    int numero;
+    sscanf(buf, " %i", &numero);
+    t.valor = numero;
+    free(buf);
+
+    return t;
+}
+
+const char *tipo_token_string(token_tipo tipo)
+{
+    switch (tipo)
+    {
+    case TOKEN_DOIS_PONTOS:
+        return ":";
+    case TOKEN_PORCENTO:
+        return "%";
+    case TOKEN_VIRGULA:
+        return ",";
+    case TOKEN_PAREN_ESQ:
+        return "(";
+    case TOKEN_PAREN_DIR:
+        return ")";
+    case TOKEN_MENOS:
+        return "-";
+    case TOKEN_NOME:
+        return "nome";
+    case TOKEN_NUMERO:
+        return "numero";
+    case TOKEN_REGISTRADOR:
+        return "registrador";
+    case TOKEN_EOF:
+        return "EOF";
+    case TOKEN_ERRO:
+        return "erro";
+    default:
+        return "";
+    }
 }
 
 token prox_token_r(scanner *s)
@@ -219,26 +251,34 @@ token prox_token_r(scanner *s)
     default:
     {
         // numeros
-        if (eh_numerico(ch))
+        if (isdigit(ch))
         {
             return scanner_numero(s);
         }
 
         // identificadores
-        if (eh_alfabetico(ch))
+        if (isalpha(ch))
         {
-            return scanner_identificador(s);
+            if ((ch == 'r' || ch == 'R') && isdigit(scanner_ver(s)))
+            {
+                // registrador
+                return scanner_registrador(s);
+            }
+            else
+            {
+                return scanner_identificador(s);
+            }
         }
 
         // etc
+        fprintf(stderr, "Erro: caractere desconhecido '%c'\n", ch);
         return scanner_faz_erro(s);
     }
     }
 }
 
-void token_print(token t)
+void token_lexema(token t)
 {
-    printf("tipo: %d token: ", t.tipo);
     fwrite(t.inicio, sizeof(char), t.comp, stdout);
 }
 
@@ -259,9 +299,9 @@ token espera_token(scanner *s, token_tipo tipo)
     token t = ve_token(s);
     if (t.tipo != tipo)
     {
-        printf("Ta errado! Esperava %d, obtive ", tipo);
-        token_print(t);
-        printf("\n");
+        fprintf(stderr, "Erro: linha %d: esperava '%s', obtive '", t.linha, tipo_token_string(tipo));
+        token_lexema(t);
+        fprintf(stderr, "'\n");
         exit(1);
     }
     return prox_token(s);
@@ -343,56 +383,267 @@ void bloco_configuracao(scanner *s, config *c)
     }
     else
     {
-        printf("Erro na sintaxe, esperava bloco\n");
+        fprintf(stderr, "Erro na sintaxe, esperava bloco\n");
         exit(1);
     }
 }
 
-void configuracao(scanner *s)
+config configuracao(scanner *s)
 {
     config c = {0};
 
     token t;
     while ((t = ve_token(s)).tipo != TOKEN_PORCENTO)
     {
-        bloco_configuracao(s, &c);
-        if (ve_token(s).tipo == TOKEN_EOF)
+        if (t.tipo == TOKEN_EOF)
         {
-            printf("Esperava fechamento do comentario de configuracao\n");
+            fprintf(stderr, "Erro: linha %d: Comentario de configuracao nao finalizado", t.linha);
             exit(1);
         }
-    };
+        bloco_configuracao(s, &c);
+    }
     espera_token(s, TOKEN_PORCENTO);
 
-    printf(
-        "marcos \n"
-        "n_uf_add: %d\n"
-        "n_uf_mul: %d\n"
-        "n_uf_int: %d\n"
-        "ck_ld: %d\n"
-        "ck_mul: %d\n"
-        "ck_add: %d\n"
-        "ck_sub: %d\n"
-        "ck_div: %d\n",
-        c.n_uf_add,
-        c.n_uf_mul,
-        c.n_uf_int,
-        c.ck_ld,
-        c.ck_mul,
-        c.ck_add,
-        c.ck_sub,
-        c.ck_div);
+    return c;
 }
 
-void instrucao(scanner *s)
+inst instrucao(scanner *s)
 {
     token opcode = espera_token(s, TOKEN_NOME);
 
-    if (compara_token(opcode, "ld"))
+    /*
+        FORMATOS:
+
+        1 add, sub, mul, div, and, or:
+            op  rd, rs, rt
+        2 addi, subi, blt, bgt, beq, bne:
+            op  rs, rt, imm
+        3 not:
+            op  rd, rs
+        4 j:
+            op  imm
+        5 lw, sw:
+            op  rd, imm(rs)
+
+    */
+
+    opcode_instrucao op;
+    int formato = -1;
+
+    switch (opcode.inicio[0])
+    {
+    case 'd':
+        // div
+        if (compara_token(opcode, "div"))
+        {
+            op = OP_DIV;
+            formato = 1;
+        }
+        break;
+    case 'j':
+        // j
+        if (compara_token(opcode, "j"))
+        {
+            op = OP_J;
+            formato = 4;
+        }
+        break;
+    case 'l':
+        // lw
+        if (compara_token(opcode, "lw"))
+        {
+            op = OP_LW;
+            formato = 5;
+        }
+        break;
+    case 'm':
+        // mul
+        if (compara_token(opcode, "mul"))
+        {
+            op = OP_MUL;
+            formato = 1;
+        }
+        break;
+    case 'n':
+        // not
+        if (compara_token(opcode, "not"))
+        {
+            op = OP_NOT;
+            formato = 3;
+        }
+        break;
+    case 'o':
+        // or
+        if (compara_token(opcode, "or"))
+        {
+            op = OP_OR;
+            formato = 1;
+        }
+        break;
+
+    case 's':
+        if (opcode.comp > 1)
+        {
+            switch (opcode.inicio[1])
+            {
+            case 'u':
+                // sub or subi
+                if (compara_token(opcode, "sub"))
+                {
+                    op = OP_SUB;
+                    formato = 1;
+                }
+                else if (compara_token(opcode, "subi"))
+                {
+                    op = OP_SUBI;
+                    formato = 2;
+                }
+                break;
+            case 'w':
+                // sw
+                if (compara_token(opcode, "sw"))
+                {
+                    op = OP_SW;
+                    formato = 5;
+                }
+                break;
+            }
+        }
+
+    case 'a':
+        if (opcode.comp > 1)
+        {
+            switch (opcode.inicio[1])
+            {
+            case 'd':
+                // add or addi
+                if (compara_token(opcode, "add"))
+                {
+                    op = OP_ADD;
+                    formato = 1;
+                }
+                else if (compara_token(opcode, "div"))
+                {
+                    op = OP_ADDI;
+                    formato = 2;
+                }
+                break;
+            case 'n':
+                // and
+                if (compara_token(opcode, "and"))
+                {
+                    op = OP_AND;
+                    formato = 1;
+                }
+                break;
+            }
+        }
+
+    case 'b':
+        if (opcode.comp > 1)
+        {
+            switch (opcode.inicio[1])
+            {
+            case 'e':
+                // beq
+                if (compara_token(opcode, "beq"))
+                {
+                    op = OP_BEQ;
+                    formato = 1;
+                }
+                break;
+            case 'g':
+                // bgt
+                if (compara_token(opcode, "bgt"))
+                {
+                    op = OP_BGT;
+                    formato = 1;
+                }
+                break;
+            case 'l':
+                // blt
+                if (compara_token(opcode, "blt"))
+                {
+                    op = OP_BLT;
+                    formato = 1;
+                }
+                break;
+            case 'n':
+                // bne
+                if (compara_token(opcode, "bne"))
+                {
+                    op = OP_BNE;
+                    formato = 1;
+                }
+                break;
+            }
+        }
+    }
+
+    switch (formato)
+    {
+    case 1:
+    {
+        token destino = espera_token(s, TOKEN_REGISTRADOR);
+        espera_token(s, TOKEN_VIRGULA);
+        token op1 = espera_token(s, TOKEN_REGISTRADOR);
+        espera_token(s, TOKEN_VIRGULA);
+        token op2 = espera_token(s, TOKEN_REGISTRADOR);
+
+        return (inst){
+            .opcode = op,
+            .op1 = destino.valor,
+            .op2 = op1.valor,
+            .op3 = op2.valor};
+    }
+    case 2:
+    {
+        token destino = espera_token(s, TOKEN_REGISTRADOR);
+        espera_token(s, TOKEN_VIRGULA);
+        token op1 = espera_token(s, TOKEN_REGISTRADOR);
+        espera_token(s, TOKEN_VIRGULA);
+
+        int negativo = 1;
+        if (ve_token(s).tipo == TOKEN_MENOS)
+        {
+            prox_token(s);
+            negativo = -1;
+        }
+        token imm = espera_token(s, TOKEN_NUMERO);
+
+        return (inst){
+            .opcode = op,
+            .op1 = destino.valor,
+            .op2 = op1.valor,
+            .op3 = negativo * imm.valor};
+    }
+    case 3:
+    {
+        token destino = espera_token(s, TOKEN_REGISTRADOR);
+        espera_token(s, TOKEN_VIRGULA);
+        token fonte = espera_token(s, TOKEN_REGISTRADOR);
+
+        return (inst){
+            .opcode = op,
+            .op1 = destino.valor,
+            .op2 = fonte.valor,
+            .op3 = 0};
+    }
+    case 4:
+    {
+        token imm = espera_token(s, TOKEN_NUMERO);
+
+        return (inst){
+            .opcode = op,
+            .op1 = imm.valor,
+            .op2 = 0,
+            .op3 = 0};
+    }
+    case 5:
     {
         // formato ld f1 (num)f3
-        token dest = espera_token(s, TOKEN_NOME);
-        espera_token(s, TOKEN_PAREN_ESQ);
+        token dest = espera_token(s, TOKEN_REGISTRADOR);
+        espera_token(s, TOKEN_VIRGULA);
 
         int negativo = 1;
         if (ve_token(s).tipo == TOKEN_MENOS)
@@ -403,72 +654,79 @@ void instrucao(scanner *s)
         }
 
         token num = espera_token(s, TOKEN_NUMERO);
+        espera_token(s, TOKEN_PAREN_ESQ);
+        token base = espera_token(s, TOKEN_REGISTRADOR);
         espera_token(s, TOKEN_PAREN_DIR);
-        token base = espera_token(s, TOKEN_NOME);
 
-        printf("OP: ");
-        token_print(opcode);
-        printf(" DEST: ");
-        token_print(dest);
-        printf(" OFFSET: %d", negativo * num.valor);
-        printf(" BASE: ");
-        token_print(base);
-        puts("");
+        return (inst){
+            .opcode = op,
+            .op1 = dest.valor,
+            .op2 = negativo * num.valor,
+            .op3 = base.valor};
     }
-    else
-    {
-        // formato 3 ops
-        token op1 = espera_token(s, TOKEN_NOME);
-        token op2 = espera_token(s, TOKEN_NOME);
-        token op3 = espera_token(s, TOKEN_NOME);
-
-        printf("OP: ");
-        token_print(opcode);
-        printf(" I: ");
-        token_print(op1);
-        printf(" J: ");
-        token_print(op2);
-        printf(" K: ");
-        token_print(op3);
-        puts("");
+    default:
+        fprintf(stderr, "Erro: linha %d: instrucao nao reconhecida '", opcode.linha);
+        token_lexema(opcode);
+        fprintf(stderr, "'\n");
+        exit(1);
     }
 }
 
-void le_sb(char *src, char *fim)
+void le_sb(char *src, char *fim, config *config_saida, inst **instrucoes_saida, int *n_instrucoes)
 {
     scanner s;
     s.atual = src;
     s.fim = fim;
     s.inicio = src;
+    s.linha = 1;
 
-    // arquivo:
-    // comentário de configuração -> %
-    // instrução
+    // prepara lista de instruções lidas
+    int num_instrucoes = 0;
+    int capacidade = 1;
+    inst *instrucoes_lidas = realloc(NULL, sizeof(inst) * capacidade);
 
+    // lê a configuração
+    espera_token(&s, TOKEN_PORCENTO);
+    config c = configuracao(&s);
+    *config_saida = c;
+
+    // lê as demais instruções
     bool pronto = false;
+    int n_instrucao = 0;
     while (!pronto)
     {
         token t = ve_token(&s);
         switch (t.tipo)
         {
-        case TOKEN_PORCENTO:
-            prox_token(&s);
-            configuracao(&s);
-            break;
         case TOKEN_NOME:
-            instrucao(&s);
+        {
+            inst i = instrucao(&s);
+            if (num_instrucoes + 1 >= capacidade)
+            {
+                capacidade *= 2;
+                instrucoes_lidas = realloc(instrucoes_lidas, sizeof(inst) * capacidade);
+            }
+            instrucoes_lidas[num_instrucoes++] = i;
             break;
+        }
         case TOKEN_EOF:
             pronto = true;
             break;
+        case TOKEN_PORCENTO:
+            fprintf(stderr, "Erro: linha %d: um arquivo so pode haver um comentario de configuracao\n", t.linha);
+            exit(1);
+            break;
+        case TOKEN_ERRO:
+            exit(1);
+            break;
         default:
-            printf("eu encontrei algo que nao conheco!");
+            fprintf(stderr, "Erro: linha %d: esperava instrucao, encontrado '", t.linha);
+            token_lexema(t);
+            fprintf(stderr, "'\n");
             exit(1);
         }
     }
+
+    *instrucoes_saida = instrucoes_lidas;
+    *n_instrucoes = num_instrucoes;
 }
-
-// [PORCENTO, IDENT (add), DOIS_PONTOS, NUM (5), IDENT (mul), DOIS PONTOS, NUM (50), ..., PORCENTO]
-
-// % UF add : 5 ....
-//      ^--

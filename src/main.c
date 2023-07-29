@@ -18,7 +18,7 @@ int main(void)
 
     for (int i = 0; i < n_instrucoes; i++)
     {
-        printf("%d %d %d %d\n", instrucoes[i].opcode, instrucoes[i].op1, instrucoes[i].op2, instrucoes[i].op3);
+        printf("%08x\t%d\n", instrucoes[i].instrucao, instrucoes[i].i.opcode);
     }
 
     free(instrucoes);

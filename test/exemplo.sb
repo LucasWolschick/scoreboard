@@ -1,13 +1,16 @@
-%
+/*
     UF
     add:5
     mul:50
     INST
     add:3
     mul:50
-%
+*/
+
+.data
+.text
 lw r6, -5(r5)
 add r6, r7, r8
 sub r4, r5, r9
-div r123, r0, r9
+div r13, r0, r9
 add r6, r6, r6 # oi

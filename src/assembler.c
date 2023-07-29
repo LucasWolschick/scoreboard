@@ -1,4 +1,4 @@
-#include "leitor_sb.h"
+#include "assembler.h"
 
 /*
  * Recebe um caminho e carrega os conteúdos do arquivo deste caminho para um

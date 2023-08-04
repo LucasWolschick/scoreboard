@@ -1,4 +1,4 @@
-CC = clang
+CC = gcc
 CFLAGS = -g
 
 parser: src/main.o src/parser.o src/vector.o src/parser.h src/vector.h

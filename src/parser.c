@@ -288,7 +288,7 @@ token scan_identifier(scanner *s)
     case 'm':
         if (cmp_token(t, "mul"))
         {
-            t.value = OP_DIV;
+            t.value = OP_MUL;
             return t;
         }
         break;

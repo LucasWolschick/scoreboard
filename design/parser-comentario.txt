@@ -1,0 +1,19 @@
+%
+    UF
+    add : 5
+    mul: 50
+    INST
+    add :3
+    mult:50
+%
+
+gramática:
+    comentario -> "%" ufs diretivas "%"
+
+    ufs -> "UF\n" diretivaUF*
+
+    diretivaUF -> identifier ":" number "\n"
+
+    insts -> "INST\n" diretivaInst*
+
+    diretivaInstrucao -> identifier ":" number "\n"

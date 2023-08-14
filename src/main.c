@@ -1,8 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#define MIN_TAM_MEMO 100
+
 #include "parser.h"
+#include "cpu.h"
+#include "bus.h"
+#include "memory.h"
+#include "register.h"
+#include "func_unit.h"
+
+#define MIN_TAM_MEMO 100
 
 char *file_to_string(const char *path)
 {
@@ -28,13 +35,7 @@ char *file_to_string(const char *path)
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
-    {
-        fprintf(stderr, "Uso: %s <caminho>\n", argv[0]);
-        exit(1);
-    }
-
-    if (argc  < 5)
+    if (argc < 5)
     {
         fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
         exit(1);
@@ -44,62 +45,128 @@ int main(int argc, char *argv[])
     int memorySize = 0;
     char *outputFileName = NULL;
 
-    for(int i = 1; i < argc; i++)
+    for (int i = 1; i < argc; i++)
     {
-        if(strcmp(argv[i], "-p") == 0)
+        if (strcmp(argv[i], "-p") == 0)
         {
+            if (argc < i + 2)
+            {
+                fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
+                exit(1);
+            }
             programFileName = argv[i + 1];
             i++;
         }
         else if (strcmp(argv[i], "-m") == 0)
         {
-            memorySize = atoi(argv[i + 1]);
-            if(memorySize < MIN_TAM_MEMO)
+            if (argc < i + 2)
             {
-                fprintf(stderr, "Lucas Wolschick");
+                fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
+                exit(1);
+            }
+            // TODO: tratar o caso do erro de conversão
+            memorySize = atoi(argv[i + 1]);
+            if (memorySize < MIN_TAM_MEMO)
+            {
+                fprintf(stderr, "Erro: a memoria deve ter no minimo 100 bytes de comprimento.\n");
                 exit(1);
             }
             i++;
         }
         else if (strcmp(argv[i], "-o") == 0)
         {
+            if (argc < i + 2)
+            {
+                fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
+                exit(1);
+            }
             outputFileName = argv[i + 1];
             i++;
         }
     }
 
-    if (programFileName == NULL || memorySize < MIN_TAM_MEMO)
+    if (programFileName == NULL)
     {
-        fprintf(stderr, "ERRO");
+        fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
         exit(1);
     }
 
-    // char *b = file_to_string(programFileName);
-    // int n_instrucoes;
-    // vector data, instrucoes;
-    // parse(b, &data, &instrucoes);
-
-    char *b = file_to_string(argv[1]);
-    int n_instrucoes;
+    char *b = file_to_string(programFileName);
     vector data, instrucoes;
-    parse(b, &data, &instrucoes);
+    config cfg;
+    parse(b, &data, &instrucoes, &cfg);
 
-    puts("Dados:");
+    if (vector_len(&data) * sizeof(vector_get(&data, 0, 0)) > 100)
+    {
+        fprintf(stderr, "Erro: a secao de dados deve ter no maximo 100 bytes de comprimento.\n");
+        exit(1);
+    }
+
+    if (vector_len(&instrucoes) * sizeof(vector_get(&instrucoes, 0, 0)) > memorySize - 100)
+    {
+        fprintf(stderr, "Erro: a secao de instrucoes deve ter no maximo %d bytes de comprimento.\n", memorySize - 100);
+        exit(1);
+    }
+
+    // inicializa registradores
+    // inicializa memória
+    memory *mem = memory_init(memorySize);
+
+    // obs: nosso computador é big endian
+    // escreve .data nos primeiros 100 bytes
     for (int i = 0; i < vector_len(&data); i++)
     {
-        int e;
-        vector_get(&data, i, &e);
-        printf("%5d: %08x\n", i, e);
+        uint32_t datum;
+        vector_get(&data, i, &datum);
+
+        for (int j = 0; j < sizeof(datum); j++)
+        {
+            uint8_t byte = (datum >> (8 * (sizeof(datum) - j - 1))) & 0xFF;
+            memory_write(mem, i + j, byte);
+        }
     }
 
-    puts("Instrucoes:");
+    // escreve .text nos bytes 100 em diante
     for (int i = 0; i < vector_len(&instrucoes); i++)
     {
-        int e;
-        vector_get(&instrucoes, i, &e);
-        printf("%5d: %08x\n", i + 100, e);
+        uint32_t instrucao;
+        vector_get(&instrucoes, i, &instrucao);
+
+        for (int j = 0; j < sizeof(instrucao); j++)
+        {
+            uint8_t byte = (instrucao >> (8 * (sizeof(instrucao) - j - 1))) & 0xFF;
+            memory_write(mem, 100 + i + j, byte);
+        }
     }
 
+    // inicializa unidades funcionais
+    int n_ufs = cfg.n_uf_add + cfg.n_uf_mul + cfg.n_uf_int;
+    uf *ufs = calloc(sizeof(uf), n_ufs);
+
+    // inicializa cpu
+    cpu *c = cpu_init(NULL, cfg, memorySize);
+
+    // inicializa banco de registradores
+    register_bank *regs = register_init();
+    register_write_pc(regs, 100);
+
+    // inicializa barramento
+    bus *barramento = bus_init(c, regs, mem, ufs);
+    c->bus = barramento;
+
+    // põe pra rodar
+    while (!c->stop)
+    {
+        pipeline(c);
+        // TODO: printar as tabelas :)
+    }
+
+    // destroi as coisas
+    bus_destroy(barramento);
+    register_destroy(regs);
+    cpu_destroy(c);
+    free(ufs);
+    memory_destroy(mem);
     vector_destroy(&data);
     vector_destroy(&instrucoes);
     free(b);

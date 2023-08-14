@@ -2,6 +2,7 @@
 #define SCANNER_H
 
 #include "vector.h"
+#include "opcode.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -51,27 +52,6 @@ typedef struct token
     int value;
     int line;
 } token;
-
-typedef enum opcode
-{
-    OP_ADD,
-    OP_ADDI,
-    OP_SUB,
-    OP_SUBI,
-    OP_MUL,
-    OP_DIV,
-    OP_AND,
-    OP_OR,
-    OP_NOT,
-    OP_BLT,
-    OP_BGT,
-    OP_BEQ,
-    OP_BNE,
-    OP_J,
-    OP_LW,
-    OP_SW,
-    OP_EXIT
-} opcode;
 
 typedef enum section_name
 {
@@ -132,6 +112,6 @@ vector data_section(scanner *s);
 
 vector text_section(scanner *s);
 
-void parse(const char *src, vector *data_vector, vector *inst_vector);
+void parse(const char *src, vector *data_vector, vector *inst_vector, config *config_out);
 
 #endif

@@ -1,10 +1,16 @@
 CC = gcc
 CFLAGS = -g
 
-parser: src/main.o src/parser.o src/vector.o src/parser.h src/vector.h
-	$(CC) src/*.o -o parser
+SOURCES = $(wildcard src/*.c)
+HEADERS = $(wildcard src/*.h)
+OBJECTS = $(patsubst %.c, %.o, $(SOURCES))
+
+EXECUTABLE = scoreboard
+
+$(EXECUTABLE): $(OBJECTS) $(HEADERS)
+	$(CC) src/*.o -o $(EXECUTABLE)
 
 clean:
-	rm -f src/*.o ./parser
+	rm -f $(OBJECTS) ./$(EXECUTABLE)
 
 .PHONY: clean

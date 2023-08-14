@@ -759,7 +759,7 @@ vector text_section(scanner *s)
     return v;
 }
 
-void parse(const char *src, vector *data_vector, vector *inst_vector)
+void parse(const char *src, vector *data_vector, vector *inst_vector, config *config_out)
 {
     // src -> comment data_section '.text' inst*
     //
@@ -796,4 +796,5 @@ void parse(const char *src, vector *data_vector, vector *inst_vector)
 
     *data_vector = data;
     *inst_vector = insts;
+    *config_out = c;
 }

@@ -68,9 +68,17 @@ typedef struct scoreboard
     instruction_status *inst;
     reg_status *regs;
     uf_status *uf;
+
+    size_t inst_size;
+    size_t inst_capacity;
 } scoreboard;
 
 scoreboard *scoreboard_init(int n_registers, config *cfg);
 void scoreboard_destroy(scoreboard *sb);
+
+uint32_t scoreboard_add_instruction(scoreboard *sb, instruction_status is);
+instruction_status *scoreboard_get_instruction(scoreboard *sb, int iid);
+void scoreboard_expand_instructions(scoreboard *sb);
+size_t scoreboard_n_instructions(scoreboard *sb);
 
 #endif

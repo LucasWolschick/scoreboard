@@ -48,15 +48,16 @@ void fetch(cpu *c)
 
     printf("FETCH %08x\n", instruction);
 
-    instruction_status *inst = bus_sb_get_instruction_status(c->bus, pc);
-    inst->instruction = instruction;
-    inst->st = STAGE_ISSUE;
-
+    instruction_status inst;
+    inst.instruction = instruction;
+    inst.st = STAGE_ISSUE;
+    inst.uf = -1;
     for (stage s = STAGE_FETCH; s <= STAGE_DONE; s++)
     {
-        inst->when[s] = -1;
+        inst.when[s] = -1;
     }
-    inst->when[STAGE_FETCH] = c->ck;
+    inst.when[STAGE_FETCH] = c->ck;
+    bus_sb_add_instruction(c->bus, inst);
 
     // incrementar contador
     // tratamento especial para jumps
@@ -86,9 +87,10 @@ void fetch(cpu *c)
 void issue(cpu *c)
 {
     // para cada instrução nesta etapa...
-    for (int i = 100; i < c->n_instructions; i++)
+    size_t n_insts = bus_sb_n_instructions(c->bus);
+    for (int i = 0; i < n_insts; i++)
     {
-        instruction_status inst = *bus_sb_get_instruction_status(c->bus, i);
+        instruction_status inst = *bus_sb_get_instruction(c->bus, i);
         if (inst.st != STAGE_ISSUE)
         {
             continue;
@@ -239,10 +241,11 @@ void issue(cpu *c)
 void read_operands(cpu *c)
 {
     // para cada instrução...
-    for (int i = 0; i < c->n_instructions; i++)
+    size_t n_insts = bus_sb_n_instructions(c->bus);
+    for (int i = 0; i < n_insts; i++)
     {
         // se a instrução está nesta etapa...
-        instruction_status inst = *bus_sb_get_instruction_status(c->bus, i);
+        instruction_status inst = *bus_sb_get_instruction(c->bus, i);
         if (inst.st != STAGE_READ_OPERANDS)
         {
             continue;
@@ -271,10 +274,11 @@ void read_operands(cpu *c)
 void execution_complete(cpu *c)
 {
     // para cada instrução...
-    for (int i = 100; i < c->n_instructions; i++)
+    size_t n_insts = bus_sb_n_instructions(c->bus);
+    for (int i = 0; i < n_insts; i++)
     {
         // se a instrução está nesta etapa...
-        instruction_status inst = *bus_sb_get_instruction_status(c->bus, i);
+        instruction_status inst = *bus_sb_get_instruction(c->bus, i);
         if (inst.st != STAGE_EXECUTION_COMPLETE)
         {
             continue;
@@ -294,9 +298,10 @@ void execution_complete(cpu *c)
 
 void write_results(cpu *c)
 {
-    for (int i = 100; i < c->n_instructions; i++)
+    size_t n_insts = bus_sb_n_instructions(c->bus);
+    for (int i = 0; i < n_insts; i++)
     {
-        instruction_status inst = *bus_sb_get_instruction_status(c->bus, i);
+        instruction_status inst = *bus_sb_get_instruction(c->bus, i);
 
         if (inst.st != STAGE_WRITE_RESULTS)
         {

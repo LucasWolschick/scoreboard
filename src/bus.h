@@ -44,9 +44,12 @@ void bus_func_unit_load_instruction(bus *b, uint32_t unit, uint32_t instruction)
 void bus_func_unit_load_ops(bus *b, uint32_t unit, sys_bus *sb);
 void bus_func_unit_write_res(bus *b, uint32_t unit, sys_bus *sb);
 
-instruction_status *bus_sb_get_instruction_status(bus *b, uint32_t pc);
 reg_status *bus_sb_get_register_status(bus *b, uint8_t reg);
 uf_status *bus_sb_get_func_unit_status(bus *b, uint32_t unit);
+
+uint32_t bus_sb_add_instruction(bus *b, instruction_status is);
+instruction_status *bus_sb_get_instruction(bus *b, int iid);
+size_t bus_sb_n_instructions(bus *b);
 
 void bus_signal_exit(bus *b);
 

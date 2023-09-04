@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     // inicializa memória
     memory *mem = memory_init(memorySize);
 
-    // obs: nosso computador é big endian
+    // obs: nosso computador é little endian
     // escreve .data nos primeiros 100 bytes
     for (int i = 0; i < vector_len(&data); i++)
     {
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
         for (int j = 0; j < sizeof(datum); j++)
         {
             uint8_t byte = (datum >> (8 * (sizeof(datum) - j - 1))) & 0xFF;
-            memory_write(mem, i + j, byte);
+            memory_write(mem, i * sizeof(datum) + j, byte);
         }
     }
 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
         for (int j = 0; j < sizeof(instrucao); j++)
         {
             uint8_t byte = (instrucao >> (8 * (sizeof(instrucao) - j - 1))) & 0xFF;
-            memory_write(mem, 100 + i + j, byte);
+            memory_write(mem, 100 + i * sizeof(instrucao) + j, byte);
         }
     }
 

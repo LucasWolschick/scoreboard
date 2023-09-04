@@ -14,12 +14,12 @@ void sys_bus_destroy(sys_bus *b)
     free(b);
 }
 
-uint32_t sys_bus_read_memory(sys_bus *b, uint32_t address)
+uint8_t sys_bus_read_memory(sys_bus *b, uint32_t address)
 {
     return memory_read(b->memory, address);
 }
 
-void sys_bus_write_memory(sys_bus *b, uint32_t address, uint32_t value)
+void sys_bus_write_memory(sys_bus *b, uint32_t address, uint8_t value)
 {
     memory_write(b->memory, address, value);
 }

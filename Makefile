@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -fsanitize=address -fsanitize=undefined -Wall -Werror
+CFLAGS = -g -Wall -Werror -fsanitize=address -fsanitize=undefined
 
 SOURCES = $(wildcard src/*.c)
 HEADERS = $(wildcard src/*.h)

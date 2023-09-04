@@ -44,7 +44,9 @@ void fetch(cpu *c)
     int pc = bus_read_pc(c->bus);
 
     // carregar a instrução da memória e colocar na tabela inst
-    uint32_t instruction = sys_bus_read_memory(c->sys_bus, pc);
+    uint32_t instruction = (sys_bus_read_memory(c->sys_bus, pc) << 24) | (sys_bus_read_memory(c->sys_bus, pc + 1) << 16) | (sys_bus_read_memory(c->sys_bus, pc + 2) << 8) | (sys_bus_read_memory(c->sys_bus, pc + 3));
+
+    printf("FETCH %08x\n", instruction);
 
     instruction_status *inst = bus_sb_get_instruction_status(c->bus, pc);
     inst->instruction = instruction;
@@ -67,6 +69,7 @@ void fetch(cpu *c)
     case OP_BEQ:
     case OP_BGT:
     case OP_BNE:
+    case OP_EXIT:
         c->stall = true;
         break;
 
@@ -75,7 +78,7 @@ void fetch(cpu *c)
         break;
 
     default:
-        bus_write_pc(c->bus, pc + 1);
+        bus_write_pc(c->bus, pc + 4);
         break;
     }
 }
@@ -90,6 +93,8 @@ void issue(cpu *c)
         {
             continue;
         }
+
+        printf("ISSUE %08x\n", inst.instruction);
 
         // decodifica
         int opcode = inst.instruction >> 26;
@@ -239,6 +244,8 @@ void read_operands(cpu *c)
             continue;
         }
 
+        printf("R.OPS %08x\n", inst.instruction);
+
         // se os dois operandos estão prontos...
         uf_status *uf_s = bus_sb_get_func_unit_status(c->bus, inst.uf);
         if (uf_s->rj && uf_s->rk)
@@ -291,6 +298,8 @@ void write_results(cpu *c)
         {
             continue;
         }
+
+        printf("W.RES %08x\n", inst.instruction);
 
         uf_status *uf_uf_status = bus_sb_get_func_unit_status(c->bus, inst.uf);
 

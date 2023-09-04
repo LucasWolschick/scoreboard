@@ -16,7 +16,7 @@ typedef struct sys_bus
 sys_bus *sys_bus_init(memory *m, cpu *c);
 void sys_bus_destroy(sys_bus *b);
 
-uint32_t sys_bus_read_memory(sys_bus *b, uint32_t address);
-void sys_bus_write_memory(sys_bus *b, uint32_t address, uint32_t value);
+uint8_t sys_bus_read_memory(sys_bus *b, uint32_t address);
+void sys_bus_write_memory(sys_bus *b, uint32_t address, uint8_t value);
 
 #endif

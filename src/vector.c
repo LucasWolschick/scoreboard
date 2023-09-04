@@ -27,10 +27,10 @@ void vector_expand(vector *v)
     {
         v->capacity *= 2;
     }
-    v->ptr = realloc(v->ptr, sizeof(int) * (v->capacity));
+    v->ptr = realloc(v->ptr, sizeof(VECTOR_TYPE) * (v->capacity));
 }
 
-void vector_push(vector *v, int elem)
+void vector_push(vector *v, VECTOR_TYPE elem)
 {
     if (v->len + 1 > v->capacity)
     {
@@ -40,11 +40,11 @@ void vector_push(vector *v, int elem)
     v->len++;
 }
 
-bool vector_pop(vector *v, int *elem)
+bool vector_pop(vector *v, VECTOR_TYPE *elem)
 {
     if (v->len > 0)
     {
-        int e = v->ptr[v->len];
+        VECTOR_TYPE e = v->ptr[v->len];
         v->len--;
         *elem = e;
         return true;
@@ -52,7 +52,7 @@ bool vector_pop(vector *v, int *elem)
     return false;
 }
 
-bool vector_get(vector *v, size_t i, int *elem)
+bool vector_get(vector *v, size_t i, VECTOR_TYPE *elem)
 {
     if (0 <= i && i < v->len)
     {
@@ -62,7 +62,7 @@ bool vector_get(vector *v, size_t i, int *elem)
     return false;
 }
 
-bool vector_set(vector *v, size_t i, int elem)
+bool vector_set(vector *v, size_t i, VECTOR_TYPE elem)
 {
     if (0 <= i && i < v->len)
     {

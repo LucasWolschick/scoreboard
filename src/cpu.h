@@ -6,19 +6,23 @@
 
 #include "parser.h"
 #include "bus.h"
-#include "scoreboarding.h"
+#include "scoreboard.h"
+#include "sys_bus.h"
 
 struct bus;
 typedef struct bus bus;
+
+struct sys_bus;
+typedef struct sys_bus sys_bus;
 
 typedef struct cpu
 {
     int ck;
     int n_instructions;
-    scoreboard_status *status;
     config cfg;
 
     bus *bus;
+    sys_bus *sys_bus;
 
     // para gerenciar parada no caso de aparecer um branch
     bool stall;
@@ -27,7 +31,7 @@ typedef struct cpu
     bool stop;
 } cpu;
 
-cpu *cpu_init(bus *b, config cfg, int n_instructions);
+cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions);
 void cpu_destroy(cpu *c);
 void fetch(cpu *c);
 void issue(cpu *c);

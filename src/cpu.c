@@ -5,56 +5,21 @@
 #include "memory.h"
 #include "register.h"
 #include "func_unit.h"
-#include "scoreboarding.h"
+#include "scoreboard.h"
 #include "parser.h"
+#include "sys_bus.h"
 
 // TODO: usar o IR
 // TODO: buffer de instruções buscadas
 // TODO: janela pós-fetch
 // TODO: controlar a largura máxima de banda do barramento na hora de fazer a escrita
 
-cpu *cpu_init(bus *b, config cfg, int n_instructions)
+cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions)
 {
-    scoreboard_status *status = malloc(sizeof(scoreboard_status));
-    status->inst = calloc(sizeof(instruction_status), n_instructions);
-    for (int i = 0; i < n_instructions; i++)
-    {
-        status->inst[i].st = STAGE_FETCH;
-        status->inst[i].uf = -1;
-        for (stage s = STAGE_FETCH; s <= STAGE_DONE; s++)
-        {
-            status->inst[i].when[s] = -1;
-        }
-    }
-
-    status->regs = calloc(sizeof(reg_status), N_REGISTERS);
-    for (int r = 0; r < N_REGISTERS; r++)
-    {
-        status->regs[r].uf = -1;
-    }
-
-    int n_ufs = cfg.n_uf_add + cfg.n_uf_int + cfg.n_uf_mul;
-    status->uf = calloc(sizeof(uf_status), n_ufs);
-    for (int u = 0; u < n_ufs; u++)
-    {
-        if (u < cfg.n_uf_add)
-        {
-            status->uf[u].type = FU_ADD;
-        }
-        else if (u < cfg.n_uf_add + cfg.n_uf_int)
-        {
-            status->uf[u].type = FU_INT;
-        }
-        else
-        {
-            status->uf[u].type = FU_MUL;
-        }
-    }
-
     cpu *c = malloc(sizeof(cpu));
     c->ck = 0;
-    c->status = status;
     c->bus = b;
+    c->sys_bus = sb;
     c->stall = false;
     c->stop = false;
     c->cfg = cfg;
@@ -65,10 +30,6 @@ cpu *cpu_init(bus *b, config cfg, int n_instructions)
 
 void cpu_destroy(cpu *c)
 {
-    free(c->status->inst);
-    free(c->status->regs);
-    free(c->status->uf);
-    free(c->status);
     free(c);
 }
 
@@ -83,15 +44,17 @@ void fetch(cpu *c)
     int pc = bus_read_pc(c->bus);
 
     // carregar a instrução da memória e colocar na tabela inst
-    uint32_t instruction = bus_read_memory(c->bus, pc);
-    c->status->inst[pc].instruction = instruction;
-    c->status->inst[pc].st = STAGE_ISSUE;
+    uint32_t instruction = sys_bus_read_memory(c->sys_bus, pc);
+
+    instruction_status *inst = bus_sb_get_instruction_status(c->bus, pc);
+    inst->instruction = instruction;
+    inst->st = STAGE_ISSUE;
 
     for (stage s = STAGE_FETCH; s <= STAGE_DONE; s++)
     {
-        c->status->inst[pc].when[s] = -1;
+        inst->when[s] = -1;
     }
-    c->status->inst[pc].when[STAGE_FETCH] = c->ck;
+    inst->when[STAGE_FETCH] = c->ck;
 
     // incrementar contador
     // tratamento especial para jumps
@@ -122,7 +85,7 @@ void issue(cpu *c)
     // para cada instrução nesta etapa...
     for (int i = 100; i < c->n_instructions; i++)
     {
-        instruction_status inst = c->status->inst[i];
+        instruction_status inst = *bus_sb_get_instruction_status(c->bus, i);
         if (inst.st != STAGE_ISSUE)
         {
             continue;
@@ -130,14 +93,14 @@ void issue(cpu *c)
 
         // decodifica
         int opcode = inst.instruction >> 26;
-        int rs, rt, rd, extra, imm, address;
+        int rs, rt, rd, imm;
 
         rs = (inst.instruction >> 21) & 0x1F;
         rt = (inst.instruction >> 16) & 0x1F;
         rd = (inst.instruction >> 11) & 0x1F;
-        extra = inst.instruction & 0x7FF;
+        // extra = inst.instruction & 0x7FF;
         imm = inst.instruction & 0xFFFF;
-        address = inst.instruction & 0x1FFFFFF;
+        // address = inst.instruction & 0x1FFFFFF;
 
         int i_type, d, s1, s2;
         switch (opcode)
@@ -216,7 +179,7 @@ void issue(cpu *c)
 
         // verifica se o registrador-resultado não está marcado para receber
         // um valor de outra UF
-        if (d != -1 && c->status->regs[d].uf != -1)
+        if (d != -1 && bus_sb_get_register_status(c->bus, d)->uf != -1)
         {
             continue;
         }
@@ -225,7 +188,7 @@ void issue(cpu *c)
         int uf = -1;
         for (int i = 0; i < (c->cfg.n_uf_add + c->cfg.n_uf_int + c->cfg.n_uf_mul); i++)
         {
-            if (c->status->uf[i].type == i_type && !c->status->uf[i].busy)
+            if (bus_sb_get_func_unit_status(c->bus, i)->type == i_type && !bus_sb_get_func_unit_status(c->bus, i)->busy)
             {
                 uf = i;
                 break;
@@ -238,21 +201,23 @@ void issue(cpu *c)
         }
 
         // nesse caso, a gente emite
-        c->status->regs[d].uf = uf;
+        bus_sb_get_register_status(c->bus, d)->uf = uf;
 
-        c->status->uf[uf].busy = true;
-        c->status->uf[uf].op = opcode;
-        c->status->uf[uf].fi = d;
-        c->status->uf[uf].fj = s1;
-        c->status->uf[uf].fk = s2;
-        c->status->uf[uf].qj = c->status->regs[s1].uf;
-        c->status->uf[uf].qk = c->status->regs[s2].uf;
-        c->status->uf[uf].rj = c->status->regs[s1].uf == -1;
-        c->status->uf[uf].rk = c->status->regs[s2].uf == -1;
+        uf_status *uf_s = bus_sb_get_func_unit_status(c->bus, uf);
+        uf_s->busy = true;
+        uf_s->op = opcode;
+        uf_s->fi = d;
+        uf_s->fj = s1;
+        uf_s->fk = s2;
+        uf_s->qj = bus_sb_get_register_status(c->bus, s1)->uf;
+        uf_s->qk = bus_sb_get_register_status(c->bus, s2)->uf;
+        uf_s->rj = bus_sb_get_register_status(c->bus, s1)->uf == -1;
+        uf_s->rk = bus_sb_get_register_status(c->bus, s2)->uf == -1;
 
-        c->status->inst[i].when[STAGE_ISSUE] = c->ck;
-        c->status->inst[i].st = STAGE_READ_OPERANDS;
-        c->status->inst[i].uf = uf;
+        instruction_status *inst_s = bus_sb_get_instruction_status(c->bus, i);
+        inst_s->when[STAGE_ISSUE] = c->ck;
+        inst_s->st = STAGE_READ_OPERANDS;
+        inst_s->uf = uf;
 
         // carrega a instrução na uf
         bus_func_unit_load_instruction(c->bus, uf, inst.instruction);
@@ -268,24 +233,26 @@ void read_operands(cpu *c)
     for (int i = 0; i < c->n_instructions; i++)
     {
         // se a instrução está nesta etapa...
-        instruction_status inst = c->status->inst[i];
+        instruction_status inst = *bus_sb_get_instruction_status(c->bus, i);
         if (inst.st != STAGE_READ_OPERANDS)
         {
             continue;
         }
 
         // se os dois operandos estão prontos...
-        if (c->status->uf[inst.uf].rj && c->status->uf[inst.uf].rk)
+        uf_status *uf_s = bus_sb_get_func_unit_status(c->bus, inst.uf);
+        if (uf_s->rj && uf_s->rk)
         {
             // manda executar
-            c->status->uf[inst.uf].rj = false;
-            c->status->uf[inst.uf].rk = false;
+            uf_s->rj = false;
+            uf_s->rk = false;
 
             // lê os operandos e despacha para a UF
-            bus_func_unit_load_ops(c->bus, inst.uf);
+            bus_func_unit_load_ops(c->bus, inst.uf, c->sys_bus);
 
-            c->status->inst[i].st = STAGE_EXECUTION_COMPLETE;
-            c->status->inst[i].when[STAGE_READ_OPERANDS] = c->ck;
+            instruction_status *inst_s = bus_sb_get_instruction_status(c->bus, i);
+            inst_s->st = STAGE_EXECUTION_COMPLETE;
+            inst_s->when[STAGE_READ_OPERANDS] = c->ck;
         }
     }
 }
@@ -296,7 +263,7 @@ void execution_complete(cpu *c)
     for (int i = 100; i < c->n_instructions; i++)
     {
         // se a instrução está nesta etapa...
-        instruction_status inst = c->status->inst[i];
+        instruction_status inst = *bus_sb_get_instruction_status(c->bus, i);
         if (inst.st != STAGE_EXECUTION_COMPLETE)
         {
             continue;
@@ -304,11 +271,12 @@ void execution_complete(cpu *c)
 
         // a UF está pronta se o clock atual - o clock em que ela concluiu a leitura de operandos
         // for maior ou igual ao tempo de execução dela
-        if (c->ck - inst.when[STAGE_READ_OPERANDS] >= c->cfg.ck_instruction[c->status->uf[inst.uf].op])
+        if (c->ck - inst.when[STAGE_READ_OPERANDS] >= c->cfg.ck_instruction[bus_sb_get_func_unit_status(c->bus, inst.uf)->op])
         {
             // manda escrever
-            c->status->inst[i].st = STAGE_WRITE_RESULTS;
-            c->status->inst[i].when[STAGE_EXECUTION_COMPLETE] = c->ck;
+            instruction_status *inst_s = bus_sb_get_instruction_status(c->bus, i);
+            inst_s->st = STAGE_WRITE_RESULTS;
+            inst_s->when[STAGE_EXECUTION_COMPLETE] = c->ck;
         }
     }
 }
@@ -317,19 +285,23 @@ void write_results(cpu *c)
 {
     for (int i = 100; i < c->n_instructions; i++)
     {
-        instruction_status inst = c->status->inst[i];
+        instruction_status inst = *bus_sb_get_instruction_status(c->bus, i);
 
         if (inst.st != STAGE_WRITE_RESULTS)
         {
             continue;
         }
 
+        uf_status *uf_uf_status = bus_sb_get_func_unit_status(c->bus, inst.uf);
+
         // verifica a condição
         bool condition = true;
         for (int f = 0; f < (c->cfg.n_uf_add + c->cfg.n_uf_int + c->cfg.n_uf_mul); f++)
         {
-            if (!((c->status->uf[f].fj != c->status->uf[inst.uf].fi || c->status->uf[f].rj == false) ||
-                  (c->status->uf[f].fk != c->status->uf[inst.uf].fi || c->status->uf[f].rk == false)))
+            uf_status *f_uf_status = bus_sb_get_func_unit_status(c->bus, f);
+
+            if (!((f_uf_status->fj != uf_uf_status->fi || f_uf_status->rj == false) ||
+                  (f_uf_status->fk != uf_uf_status->fi || f_uf_status->rk == false)))
             {
                 condition = false;
                 break;
@@ -344,17 +316,19 @@ void write_results(cpu *c)
         // escreve o resultado
         for (int f = 0; f < (c->cfg.n_uf_add + c->cfg.n_uf_int + c->cfg.n_uf_mul); f++)
         {
-            if (c->status->uf[f].qj == inst.uf)
+            uf_status *f_uf_status = bus_sb_get_func_unit_status(c->bus, f);
+
+            if (f_uf_status->qj == inst.uf)
             {
-                c->status->uf[f].rj = true;
+                f_uf_status->rj = true;
             }
-            if (c->status->uf[f].qk == inst.uf)
+            if (f_uf_status->qk == inst.uf)
             {
-                c->status->uf[f].rk = true;
+                f_uf_status->rk = true;
             }
         }
 
-        bus_func_unit_write_res(c->bus, inst.uf);
+        bus_func_unit_write_res(c->bus, inst.uf, c->sys_bus);
 
         // resolve o stall no caso da instrução ser um branch condicional
         int opcode = inst.instruction >> 26;
@@ -369,11 +343,12 @@ void write_results(cpu *c)
         }
 
         // limpa
-        c->status->regs[c->status->uf[inst.uf].fi].uf = -1;
-        c->status->uf[inst.uf] = (uf_status){0};
+        bus_sb_get_register_status(c->bus, bus_sb_get_func_unit_status(c->bus, inst.uf)->fi)->uf = -1;
+        *bus_sb_get_func_unit_status(c->bus, inst.uf) = (uf_status){0};
 
-        c->status->inst[i].st = STAGE_DONE;
-        c->status->inst[i].when[STAGE_WRITE_RESULTS] = c->ck;
+        instruction_status *inst_s = bus_sb_get_instruction_status(c->bus, i);
+        inst_s->st = STAGE_DONE;
+        inst_s->when[STAGE_WRITE_RESULTS] = c->ck;
     }
 }
 

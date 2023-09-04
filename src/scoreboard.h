@@ -2,8 +2,10 @@
 #define SCOREBOARDING_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "opcode.h"
+#include "config.h"
 
 typedef enum fu_type
 {
@@ -61,12 +63,14 @@ typedef struct instruction_status
     int when[STAGE_DONE + 1];
 } instruction_status;
 
-typedef struct scoreboard_status
+typedef struct scoreboard
 {
     instruction_status *inst;
     reg_status *regs;
-
     uf_status *uf;
-} scoreboard_status;
+} scoreboard;
+
+scoreboard *scoreboard_init(int n_registers, config *cfg);
+void scoreboard_destroy(scoreboard *sb);
 
 #endif

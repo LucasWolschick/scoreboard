@@ -2,14 +2,17 @@
 #define VECTOR_H
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+
+#define VECTOR_TYPE uint32_t
 
 typedef struct vector
 {
     size_t capacity;
     size_t len;
-    int *ptr;
+    VECTOR_TYPE *ptr;
 } vector;
 
 vector vector_new(void);
@@ -18,13 +21,13 @@ void vector_destroy(vector *v);
 
 void vector_expand(vector *v);
 
-void vector_push(vector *v, int elem);
+void vector_push(vector *v, VECTOR_TYPE elem);
 
-bool vector_pop(vector *v, int *elem);
+bool vector_pop(vector *v, VECTOR_TYPE *elem);
 
-bool vector_get(vector *v, size_t i, int *elem);
+bool vector_get(vector *v, size_t i, VECTOR_TYPE *elem);
 
-bool vector_set(vector *v, size_t i, int elem);
+bool vector_set(vector *v, size_t i, VECTOR_TYPE elem);
 
 size_t vector_len(vector *v);
 

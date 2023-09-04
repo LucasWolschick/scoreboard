@@ -1,12 +1,12 @@
 #include "bus.h"
 
-bus *bus_init(cpu *c, register_bank *r, memory *m, uf *f)
+bus *bus_init(cpu *c, register_bank *r, uf *f, scoreboard *sb)
 {
     bus *b = malloc(sizeof *b);
     b->cpu = c;
     b->registers = r;
-    b->memory = m;
     b->func_units = f;
+    b->board = sb;
     return b;
 }
 
@@ -45,32 +45,37 @@ void bus_write_reg(bus *b, uint8_t reg, uint32_t value)
     register_write(b->registers, reg, value);
 }
 
-uint8_t bus_read_memory(bus *b, uint32_t address)
-{
-    return memory_read(b->memory, address);
-}
-
-void bus_write_memory(bus *b, uint32_t address, uint8_t value)
-{
-    memory_write(b->memory, address, value);
-}
-
 void bus_func_unit_load_instruction(bus *b, uint32_t unit, uint32_t instruction)
 {
     uf_load_instruction(&b->func_units[unit], instruction);
 }
 
-void bus_func_unit_load_ops(bus *b, uint32_t unit)
+void bus_func_unit_load_ops(bus *b, uint32_t unit, sys_bus *sb)
 {
-    uf_load_ops(&b->func_units[unit], b);
+    uf_load_ops(&b->func_units[unit], b, sb);
 }
 
-void bus_func_unit_write_res(bus *b, uint32_t unit)
+void bus_func_unit_write_res(bus *b, uint32_t unit, sys_bus *sb)
 {
-    uf_write_res(&b->func_units[unit], b);
+    uf_write_res(&b->func_units[unit], b, sb);
 }
 
 void bus_signal_exit(bus *b)
 {
     b->cpu->stop = true;
+}
+
+instruction_status *bus_sb_get_instruction_status(bus *b, uint32_t pc)
+{
+    return &b->board->inst[pc];
+}
+
+reg_status *bus_sb_get_register_status(bus *b, uint8_t reg)
+{
+    return &b->board->regs[reg];
+}
+
+uf_status *bus_sb_get_func_unit_status(bus *b, uint32_t unit)
+{
+    return &b->board->uf[unit];
 }

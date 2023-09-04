@@ -3,6 +3,7 @@
 
 #include "vector.h"
 #include "opcode.h"
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -58,17 +59,6 @@ typedef enum section_name
     SECTION_DATA,
     SECTION_TEXT
 } section_name;
-
-typedef struct config
-{
-    // num de unidades funcionais
-    int n_uf_add;
-    int n_uf_mul;
-    int n_uf_int;
-
-    // ciclos por instrucao
-    int ck_instruction[OP_EXIT];
-} config;
 
 char next_char(scanner *s);
 

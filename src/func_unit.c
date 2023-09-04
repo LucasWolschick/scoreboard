@@ -6,18 +6,18 @@ void uf_load_instruction(uf *u, uint32_t instruction)
     u->res = 0;
 }
 
-void uf_load_ops(uf *u, bus *b)
+void uf_load_ops(uf *u, bus *b, sys_bus *sb)
 {
     // determina de onde ler
     int opcode = u->instruction >> 26;
-    int rs, rt, rd, extra, imm, address;
+    int rs, rt, imm;
 
     rs = (u->instruction >> 21) & 0x1F;
     rt = (u->instruction >> 16) & 0x1F;
-    rd = (u->instruction >> 11) & 0x1F;
-    extra = u->instruction & 0x7FF;
+    // rd = (u->instruction >> 11) & 0x1F;
+    // extra = u->instruction & 0x7FF;
     imm = u->instruction & 0xFFFF;
-    address = u->instruction & 0x3FFFFFF;
+    // address = u->instruction & 0x3FFFFFF;
 
     // assim que lê já executa
     switch (opcode)
@@ -97,7 +97,7 @@ void uf_load_ops(uf *u, bus *b)
     }
     case OP_LW:
     {
-        u->res = bus_read_memory(b, bus_read_reg(b, rs) + imm);
+        u->res = sys_bus_read_memory(sb, bus_read_reg(b, rs) + imm);
         break;
     }
     case OP_SW:
@@ -112,16 +112,16 @@ void uf_load_ops(uf *u, bus *b)
     }
     }
 }
-void uf_write_res(uf *u, bus *b)
+void uf_write_res(uf *u, bus *b, sys_bus *sb)
 {
     int opcode = u->instruction >> 26;
-    int rs, rt, rd, extra, imm, address;
+    int rt, rd, address;
 
-    rs = (u->instruction >> 21) & 0x1F;
+    // rs = (u->instruction >> 21) & 0x1F;
     rt = (u->instruction >> 16) & 0x1F;
     rd = (u->instruction >> 11) & 0x1F;
-    extra = u->instruction & 0x7FF;
-    imm = u->instruction & 0xFFFF;
+    // extra = u->instruction & 0x7FF;
+    // imm = u->instruction & 0xFFFF;
     address = u->instruction & 0x3FFFFFF;
 
     switch (opcode)
@@ -160,7 +160,7 @@ void uf_write_res(uf *u, bus *b)
         break;
 
     case OP_SW:
-        bus_write_memory(b, u->res2, u->res);
+        sys_bus_write_memory(sb, u->res2, u->res);
         break;
 
     case OP_EXIT:

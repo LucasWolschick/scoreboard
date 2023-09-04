@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
     char *programFileName = NULL;
     int memorySize = 0;
-    char *outputFileName = NULL;
+    // char *outputFileName = NULL;
 
     for (int i = 1; i < argc; i++)
     {
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
                 exit(1);
             }
-            outputFileName = argv[i + 1];
+            // outputFileName = argv[i + 1];
             i++;
         }
     }
@@ -144,15 +144,22 @@ int main(int argc, char *argv[])
     uf *ufs = calloc(sizeof(uf), n_ufs);
 
     // inicializa cpu
-    cpu *c = cpu_init(NULL, cfg, memorySize);
+    cpu *c = cpu_init(NULL, NULL, cfg, memorySize);
+
+    // inicializa scoreboard
+    scoreboard *sb = scoreboard_init(N_REGISTERS, &cfg);
 
     // inicializa banco de registradores
     register_bank *regs = register_init();
     register_write_pc(regs, 100);
 
     // inicializa barramento
-    bus *barramento = bus_init(c, regs, mem, ufs);
+    bus *barramento = bus_init(c, regs, ufs, sb);
     c->bus = barramento;
+
+    // inicializa barramento do sistema
+    sys_bus *sys_barramento = sys_bus_init(mem, c);
+    c->sys_bus = sys_barramento;
 
     // põe pra rodar
     while (!c->stop)

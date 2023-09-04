@@ -16,4 +16,20 @@
     -123123123
 .text
     add r6, r7, r8
+    addi r1, r2, 4
+    sub r4, r5, r9
+    subi r8, r1, 3
+    mul r1, r2, r3
+    div r31, r0, r9
+    and r5, r3, r1
+    or r4, r1, r2
+    not r2, r1
+    blt r6, r4, 8
+    bgt r6, r4, 8
+    beq r6, r4, 8
+    bne r1, r2, 6
+    j 5
+    lw r6, -5(r5)
+    sw r4, -4(r1)
+    add r6, r6, r6 # oi
     exit

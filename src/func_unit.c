@@ -9,14 +9,18 @@ void uf_load_instruction(uf *u, uint32_t instruction)
 void uf_load_ops(uf *u, bus *b, sys_bus *sb)
 {
     // determina de onde ler
-    int opcode = u->instruction >> 26;
-    int rs, rt, imm;
+    uint32_t opcode = u->instruction >> 26;
+    uint32_t rs, rt, imm;
 
     rs = (u->instruction >> 21) & 0x1F;
     rt = (u->instruction >> 16) & 0x1F;
     // rd = (u->instruction >> 11) & 0x1F;
     // extra = u->instruction & 0x7FF;
     imm = u->instruction & 0xFFFF;
+    if (imm & 0x8000)
+    {
+        imm |= 0xFFFF0000;
+    }
     // address = u->instruction & 0x3FFFFFF;
 
     // assim que lê já executa
@@ -116,8 +120,8 @@ void uf_load_ops(uf *u, bus *b, sys_bus *sb)
 }
 void uf_write_res(uf *u, bus *b, sys_bus *sb)
 {
-    int opcode = u->instruction >> 26;
-    int rt, rd, address;
+    uint32_t opcode = u->instruction >> 26;
+    uint32_t rt, rd, address;
 
     // rs = (u->instruction >> 21) & 0x1F;
     rt = (u->instruction >> 16) & 0x1F;

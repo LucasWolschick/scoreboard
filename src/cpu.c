@@ -60,8 +60,8 @@ void fetch(cpu *c)
 
     // incrementar contador
     // tratamento especial para jumps
-    int opcode = instruction >> 26;
-    int address = instruction & 0x3FFFFFF;
+    uint32_t opcode = instruction >> 26;
+    uint32_t address = instruction & 0x3FFFFFF;
 
     switch (opcode)
     {
@@ -97,14 +97,18 @@ void issue(cpu *c)
         printf("ISSUE %08x\n", inst.instruction);
 
         // decodifica
-        int opcode = inst.instruction >> 26;
-        int rs, rt, rd, imm;
+        uint32_t opcode = inst.instruction >> 26;
+        uint32_t rs, rt, rd, imm;
 
         rs = (inst.instruction >> 21) & 0x1F;
         rt = (inst.instruction >> 16) & 0x1F;
         rd = (inst.instruction >> 11) & 0x1F;
         // extra = inst.instruction & 0x7FF;
         imm = inst.instruction & 0xFFFF;
+        if (imm & 0x8000)
+        {
+            imm |= 0xFFFF0000;
+        }
         // address = inst.instruction & 0x1FFFFFF;
 
         int i_type, d, s1, s2;

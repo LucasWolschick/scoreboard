@@ -53,7 +53,13 @@ void uf_load_ops(uf *u, bus *b, sys_bus *sb)
     }
     case OP_DIV:
     {
-        u->res = bus_read_reg(b, rs) / bus_read_reg(b, rt);
+        uint32_t divisor = bus_read_reg(b, rt);
+        if (divisor == 0)
+        {
+            fprintf(stderr, "Erro: divisao por zero! Abortando\n");
+            exit(1);
+        }
+        u->res = bus_read_reg(b, rs) / divisor;
         break;
     }
     case OP_AND:

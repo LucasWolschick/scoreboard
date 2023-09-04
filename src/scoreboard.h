@@ -1,6 +1,7 @@
 #ifndef SCOREBOARDING_H
 #define SCOREBOARDING_H
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -69,11 +70,14 @@ typedef struct scoreboard
     reg_status *regs;
     uf_status *uf;
 
+    size_t n_ufs;
+    size_t n_registers;
     size_t inst_size;
     size_t inst_capacity;
 } scoreboard;
 
 scoreboard *scoreboard_init(int n_registers, config *cfg);
+scoreboard *scoreboard_copy(scoreboard *sb);
 void scoreboard_destroy(scoreboard *sb);
 
 uint32_t scoreboard_add_instruction(scoreboard *sb, instruction_status is);

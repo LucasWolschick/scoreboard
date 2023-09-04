@@ -2,28 +2,21 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <memory.h>
 
 scoreboard *scoreboard_init(int n_registers, config *cfg)
 {
     scoreboard *status = malloc(sizeof(scoreboard));
+    status->n_registers = n_registers;
 
-    // for (int i = 0; i < n_instructions; i++)
-    // {
-    //     status->inst[i].st = STAGE_FETCH;
-    //     status->inst[i].uf = -1;
-    //     for (stage s = STAGE_FETCH; s <= STAGE_DONE; s++)
-    //     {
-    //         status->inst[i].when[s] = -1;
-    //     }
-    // }
-
-    status->regs = calloc(sizeof(reg_status), n_registers);
-    for (int r = 0; r < n_registers; r++)
+    status->regs = calloc(sizeof(reg_status), status->n_registers);
+    for (int r = 0; r < status->n_registers; r++)
     {
         status->regs[r].uf = -1;
     }
 
     int n_ufs = cfg->n_uf_add + cfg->n_uf_int + cfg->n_uf_mul;
+    status->n_ufs = n_ufs;
     status->uf = calloc(sizeof(uf_status), n_ufs);
     for (int u = 0; u < n_ufs; u++)
     {
@@ -46,6 +39,26 @@ scoreboard *scoreboard_init(int n_registers, config *cfg)
     status->inst_capacity = 2;
 
     return status;
+}
+
+scoreboard *scoreboard_copy(scoreboard *sb)
+{
+    scoreboard *copy = malloc(sizeof(scoreboard));
+
+    copy->inst = malloc(sizeof(instruction_status) * sb->inst_capacity);
+    copy->inst_size = sb->inst_size;
+    copy->inst_capacity = sb->inst_capacity;
+    memcpy(copy->inst, sb->inst, sizeof(instruction_status) * sb->inst_size);
+
+    copy->regs = malloc(sizeof(reg_status) * sb->n_registers);
+    copy->n_registers = sb->n_registers;
+    memcpy(copy->regs, sb->regs, sizeof(reg_status) * sb->n_registers);
+
+    copy->uf = malloc(sizeof(uf_status) * sb->n_ufs);
+    copy->n_ufs = sb->n_ufs;
+    memcpy(copy->uf, sb->uf, sizeof(uf_status) * sb->n_ufs);
+
+    return copy;
 }
 
 void scoreboard_destroy(scoreboard *status)

@@ -151,7 +151,7 @@ void issue(cpu *c)
         case OP_NOT:
             d = rd;
             s1 = rs;
-            s2 = -1;
+            s2 = 0;
             i_type = FU_INT;
             break;
 
@@ -159,16 +159,16 @@ void issue(cpu *c)
         case OP_BGT:
         case OP_BEQ:
         case OP_BNE:
-            d = -1;
+            d = 0;
             s1 = rs;
             s2 = rt;
             i_type = FU_INT;
             break;
 
         case OP_J:
-            d = -1;
-            s1 = -1;
-            s2 = -1;
+            d = 0;
+            s1 = 0;
+            s2 = 0;
             i_type = FU_INT;
             break;
 
@@ -181,16 +181,16 @@ void issue(cpu *c)
             break;
 
         case OP_EXIT:
-            d = -1;
-            s1 = -1;
-            s2 = -1;
+            d = 0;
+            s1 = 0;
+            s2 = 0;
             i_type = FU_INT;
             break;
         }
 
         // verifica se o registrador-resultado não está marcado para receber
         // um valor de outra UF
-        if (d != -1 && bus_sb_get_register_status(c->bus, d)->uf != -1)
+        if (bus_sb_get_register_status(c->bus, d)->uf != -1)
         {
             continue;
         }
@@ -212,7 +212,8 @@ void issue(cpu *c)
         }
 
         // nesse caso, a gente emite
-        bus_sb_get_register_status(c->bus, d)->uf = uf;
+        if (d != 0)
+            bus_sb_get_register_status(c->bus, d)->uf = uf;
 
         uf_status *uf_s = bus_sb_get_func_unit_status(c->bus, uf);
         uf_s->busy = true;
@@ -220,12 +221,12 @@ void issue(cpu *c)
         uf_s->fi = d;
         uf_s->fj = s1;
         uf_s->fk = s2;
-        uf_s->qj = bus_sb_get_register_status(c->bus, s1)->uf;
-        uf_s->qk = bus_sb_get_register_status(c->bus, s2)->uf;
-        uf_s->rj = bus_sb_get_register_status(c->bus, s1)->uf == -1;
-        uf_s->rk = bus_sb_get_register_status(c->bus, s2)->uf == -1;
+        uf_s->qj = s1 == 0 ? 0 : bus_sb_get_register_status(c->bus, s1)->uf;
+        uf_s->rj = s1 == 0 || bus_sb_get_register_status(c->bus, s1)->uf == -1;
+        uf_s->qk = s2 == 0 ? 0 : bus_sb_get_register_status(c->bus, s2)->uf;
+        uf_s->rk = s2 == 0 || bus_sb_get_register_status(c->bus, s2)->uf == -1;
 
-        instruction_status *inst_s = bus_sb_get_instruction_status(c->bus, i);
+        instruction_status *inst_s = bus_sb_get_instruction(c->bus, i);
         inst_s->when[STAGE_ISSUE] = c->ck;
         inst_s->st = STAGE_READ_OPERANDS;
         inst_s->uf = uf;
@@ -264,7 +265,7 @@ void read_operands(cpu *c)
             // lê os operandos e despacha para a UF
             bus_func_unit_load_ops(c->bus, inst.uf, c->sys_bus);
 
-            instruction_status *inst_s = bus_sb_get_instruction_status(c->bus, i);
+            instruction_status *inst_s = bus_sb_get_instruction(c->bus, i);
             inst_s->st = STAGE_EXECUTION_COMPLETE;
             inst_s->when[STAGE_READ_OPERANDS] = c->ck;
         }
@@ -289,7 +290,7 @@ void execution_complete(cpu *c)
         if (c->ck - inst.when[STAGE_READ_OPERANDS] >= c->cfg.ck_instruction[bus_sb_get_func_unit_status(c->bus, inst.uf)->op])
         {
             // manda escrever
-            instruction_status *inst_s = bus_sb_get_instruction_status(c->bus, i);
+            instruction_status *inst_s = bus_sb_get_instruction(c->bus, i);
             inst_s->st = STAGE_WRITE_RESULTS;
             inst_s->when[STAGE_EXECUTION_COMPLETE] = c->ck;
         }
@@ -361,10 +362,12 @@ void write_results(cpu *c)
         }
 
         // limpa
-        bus_sb_get_register_status(c->bus, bus_sb_get_func_unit_status(c->bus, inst.uf)->fi)->uf = -1;
+        int reg_target = bus_sb_get_func_unit_status(c->bus, inst.uf)->fi;
+        if (reg_target != 0)
+            bus_sb_get_register_status(c->bus, reg_target)->uf = -1;
         *bus_sb_get_func_unit_status(c->bus, inst.uf) = (uf_status){0};
 
-        instruction_status *inst_s = bus_sb_get_instruction_status(c->bus, i);
+        instruction_status *inst_s = bus_sb_get_instruction(c->bus, i);
         inst_s->st = STAGE_DONE;
         inst_s->when[STAGE_WRITE_RESULTS] = c->ck;
     }

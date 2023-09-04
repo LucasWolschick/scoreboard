@@ -77,7 +77,7 @@ uf_status *bus_sb_get_func_unit_status(bus *b, uint32_t unit)
 
 uint32_t bus_sb_add_instruction(bus *b, instruction_status is)
 {
-    scoreboard_add_instruction(b->board, is);
+    return scoreboard_add_instruction(b->board, is);
 }
 
 instruction_status *bus_sb_get_instruction(bus *b, int iid)

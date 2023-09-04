@@ -11,7 +11,7 @@ typedef struct config
     int n_uf_int;
 
     // ciclos por instrucao
-    int ck_instruction[OP_EXIT];
+    int ck_instruction[OP_EXIT + 1];
 } config;
 
 #endif

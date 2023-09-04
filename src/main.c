@@ -169,8 +169,10 @@ int main(int argc, char *argv[])
     }
 
     // destroi as coisas
+    sys_bus_destroy(sys_barramento);
     bus_destroy(barramento);
     register_destroy(regs);
+    scoreboard_destroy(sb);
     cpu_destroy(c);
     free(ufs);
     memory_destroy(mem);

@@ -162,10 +162,10 @@ int main(int argc, char *argv[])
     c->sys_bus = sys_barramento;
 
     // põe pra rodar
-    while (!c->stop)
+    while (pipeline(c))
     {
-        pipeline(c);
         // TODO: printar as tabelas :)
+        getchar();
     }
 
     // destroi as coisas

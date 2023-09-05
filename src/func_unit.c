@@ -176,7 +176,6 @@ void uf_write_res(uf *u, bus *b, sys_bus *sb)
         break;
 
     case OP_EXIT:
-        bus_signal_exit(b);
         break;
     }
 }

@@ -51,6 +51,4 @@ uint32_t bus_sb_add_instruction(bus *b, instruction_status is);
 instruction_status *bus_sb_get_instruction(bus *b, int iid);
 size_t bus_sb_n_instructions(bus *b);
 
-void bus_signal_exit(bus *b);
-
 #endif

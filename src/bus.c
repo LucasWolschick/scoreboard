@@ -60,11 +60,6 @@ void bus_func_unit_write_res(bus *b, uint32_t unit, sys_bus *sb)
     uf_write_res(&b->func_units[unit], b, sb);
 }
 
-void bus_signal_exit(bus *b)
-{
-    b->cpu->stop = true;
-}
-
 reg_status *bus_sb_get_register_status(bus *b, uint8_t reg)
 {
     return &b->board->regs[reg];

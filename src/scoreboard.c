@@ -32,6 +32,15 @@ scoreboard *scoreboard_init(int n_registers, config *cfg)
         {
             status->uf[u].type = FU_MUL;
         }
+        status->uf[u].busy = false;
+        status->uf[u].op = 0;
+        status->uf[u].fi = -1;
+        status->uf[u].fj = -1;
+        status->uf[u].fk = -1;
+        status->uf[u].qj = -1;
+        status->uf[u].qk = -1;
+        status->uf[u].rj = false;
+        status->uf[u].rk = false;
     }
 
     status->inst = calloc(sizeof(instruction_status), 2);

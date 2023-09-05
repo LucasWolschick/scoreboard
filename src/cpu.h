@@ -8,6 +8,7 @@
 #include "bus.h"
 #include "scoreboard.h"
 #include "sys_bus.h"
+#include "inst_buffer.h"
 
 struct bus;
 typedef struct bus bus;
@@ -24,20 +25,19 @@ typedef struct cpu
     bus *bus;
     sys_bus *sys_bus;
 
+    inst_buffer *fetch_buffer;
+
     // para gerenciar parada no caso de aparecer um branch
     bool stall;
-
-    // para indicar que a instrução de parada foi executada
-    bool stop;
 } cpu;
 
 cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions);
 void cpu_destroy(cpu *c);
-void fetch(cpu *c);
-void issue(cpu *c);
-void read_operands(cpu *c);
-void execution_complete(cpu *c);
-void write_results(cpu *c);
-void pipeline(cpu *c);
+void fetch(cpu *c, scoreboard *board);
+void issue(cpu *c, scoreboard *board);
+void read_operands(cpu *c, scoreboard *board);
+void execution_complete(cpu *c, scoreboard *board);
+void write_results(cpu *c, scoreboard *board);
+bool pipeline(cpu *c);
 
 #endif

@@ -303,8 +303,7 @@ void issue(cpu *c, scoreboard *board)
     }
 
     // nesse caso, a gente emite
-    if (d != 0)
-        board->regs[d].uf = uf;
+    board->regs[d].uf = uf;
 
     uf_status *uf_s = &board->uf[uf];
     uf_s->busy = true;
@@ -312,12 +311,12 @@ void issue(cpu *c, scoreboard *board)
     uf_s->fi = d;
     uf_s->fj = s1;
     uf_s->fk = s2;
-    uf_s->qj = s1 == 0 ? 0 : bus_sb_get_register_status(c->bus, s1)->uf;
-    uf_s->rj = s1 == 0 || bus_sb_get_register_status(c->bus, s1)->uf == -1;
+    uf_s->qj = bus_sb_get_register_status(c->bus, s1)->uf;
+    uf_s->rj = bus_sb_get_register_status(c->bus, s1)->uf == -1;
     if (!is_imm)
     {
-        uf_s->qk = s2 == 0 ? 0 : bus_sb_get_register_status(c->bus, s2)->uf;
-        uf_s->rk = s2 == 0 || bus_sb_get_register_status(c->bus, s2)->uf == -1;
+        uf_s->qk = bus_sb_get_register_status(c->bus, s2)->uf;
+        uf_s->rk = bus_sb_get_register_status(c->bus, s2)->uf == -1;
     }
     else
     {
@@ -423,18 +422,15 @@ void write_results(cpu *c, scoreboard *board)
         // verifica a condição
         bool condition = true;
 
-        if (uf_uf_status->fi != 0)
+        for (int f = 0; f < c->bus->board->n_ufs; f++)
         {
-            for (int f = 0; f < (c->cfg.n_uf_add + c->cfg.n_uf_int + c->cfg.n_uf_mul); f++)
-            {
-                uf_status *f_uf_status = bus_sb_get_func_unit_status(c->bus, f);
+            uf_status *f_uf_status = bus_sb_get_func_unit_status(c->bus, f);
 
-                if (!((f_uf_status->fj != uf_uf_status->fi || f_uf_status->rj == false) ||
-                      (f_uf_status->fk != uf_uf_status->fi || f_uf_status->rk == false)))
-                {
-                    condition = false;
-                    break;
-                }
+            if (!((f_uf_status->fj != uf_uf_status->fi || f_uf_status->rj == false) &&
+                  (f_uf_status->fk != uf_uf_status->fi || f_uf_status->rk == false)))
+            {
+                condition = false;
+                break;
             }
         }
 
@@ -474,8 +470,8 @@ void write_results(cpu *c, scoreboard *board)
 
         // limpa
         int reg_target = bus_sb_get_func_unit_status(c->bus, inst.uf)->fi;
-        if (reg_target != 0)
-            board->regs[reg_target].uf = -1;
+        board->regs[reg_target].uf = -1;
+
         board->uf[inst.uf] = (uf_status){
             .busy = false,
             .op = -1,

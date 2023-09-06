@@ -169,6 +169,8 @@ int main(int argc, char *argv[])
         print_tables(c->bus->board);
         getchar();
     }
+    printf("resultado final:\n");
+    print_tables(c->bus->board);
 
     // destroi as coisas
     sys_bus_destroy(sys_barramento);

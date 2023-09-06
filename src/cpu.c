@@ -10,10 +10,7 @@
 #include "bus.h"
 #include "sys_bus.h"
 
-// TODO: fazer emissão em ordem -> colocar fila de instruções buscadas
 // TODO: usar o IR
-// TODO: buffer de instruções buscadas
-// TODO: janela pós-fetch
 // TODO: controlar a largura máxima de banda do barramento na hora de fazer a escrita
 
 cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions)

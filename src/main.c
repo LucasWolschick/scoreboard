@@ -65,8 +65,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
                 exit(1);
             }
-            // TODO: tratar o caso do erro de conversão
-            memorySize = atoi(argv[i + 1]);
+            memorySize = strtol(argv[i + 1], NULL, 10);
             if (memorySize < MIN_TAM_MEMO)
             {
                 fprintf(stderr, "Erro: a memoria deve ter no minimo 100 bytes de comprimento.\n");
@@ -165,7 +164,6 @@ int main(int argc, char *argv[])
     // põe pra rodar
     while (pipeline(c))
     {
-        // TODO: printar as tabelas :)
         print_tables(c->bus->board);
         getchar();
     }

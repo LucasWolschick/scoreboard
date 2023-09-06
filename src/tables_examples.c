@@ -1,55 +1,72 @@
-// #include <stdio.h>
+/*
+o inst é um vetor de informações por instrução
+tem inst_size instruções nele
+daí, dentro de cada instrução
+tem os dados lá do scoreboard tal
+tem um vetor em cada instrução, when, que relaciona o estágio do pipeline com o ciclo de clock que o estágio foi finalizado
+tem como vc saber qual é o próximo estágio que ele vai executar pelo stage
+daí lá guarda também a instrução codificada em um int de 32 bits sem sinal
+vc pode ver o código print_instruction no cpu.c pra ver como extrair os campos daquele número
+ok, o vetor uf tem n_ufs unidades funcionais e cada struct representa uma unidade funcional
+tem os campos lá, eles são exatamente o que a gente viu em sala
+guarda o opcode que tá executando também
+por fim, tem o vetor regs
+que é um mapeamento número do registrador -> uf que vai escrever, que nem a gente viu na sala
+o ciclo de clock atual é guardado no struct cpu
+acho isso é td pra printar as tabelas
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "bus.h"
+#include "cpu.h"
+#include "func_unit.h"
+#include "inst_buffer.h"
+#include "memory.h"
+#include "register.h"
+#include "scoreboard.h"
+#include "sys_bus.h"
+#include "vector.h"
+#include "opcode.h"
 
-// int main() {
-//     int m[6][4] = {{1, 2, 3, 4},
-//                    {5, 6, 7, 8},
-//                    {6, 9, 19, 20},
-//                    {7, 9, 11, 12},
-//                    {8, 21, 22, 62},
-//                    {13, 14, 16, 22}}; // Note que adicionei um valor 0 no final para evitar acessar posições não inicializadas.
 
-//     char operacoes[6][30] = {"L", "L", "M", "S", "D", "A"};
+void print_tables_instruction(scoreboard *sb) {
 
-//     printf("\nInstrucao\n\n");
-//     printf("*----*---*----*----*----*\n");
-//     printf("| OP | E | LO | Ex | Er |\n");
-//     printf("*----*---*----*----*----*\n");
 
-//     // Loop para imprimir os valores na tabela
+    printf("Instruction Table\n");
+    printf ("|  Fetch |  Issue  |  Read  |  Exec  |  Write  |\n");
+    for (int i = 0; i < sb->inst_size; i++) {
+        printf("|  %d  |  %d  |  %d  |  %d  |  %d  |\n", sb->inst[i].when[STAGE_FETCH], sb->inst[i].when[STAGE_ISSUE], sb->inst[i].when[STAGE_READ_OPERANDS], sb->inst[i].when[STAGE_EXECUTION_COMPLETE], sb->inst[i].when[STAGE_WRITE_RESULTS]);
+    }
+    printf("\n");
 
-//     for (int i = 0; i < 6; i++) {
-//         printf("|%4s|%3d|%4d|%4d|%4d|\n",operacoes[i], m[i][0], m[i][1], m[i][2], m[i][3]);
-//     }
+}
 
-//     printf("*----*---*----*----*----*\n");
+void print_tables_ufs(scoreboard *sb) {
 
-//     printf("\n\nUnidades Funcionais\n\n");
+    printf("UFs Table\n");
+    printf ("|  Busy |  Op  |  Fi  |  Fj  |  Fk  |  Qj  |  Qk  |  Rj  |  Rk  |\n");
+    for (int i = 0; i < sb->n_ufs; i++) {
 
-//     char uf[5][7] = {"Int", "Mult1", "Mult2", "ADD", "Div"};
+        printf("|  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |\n", sb->uf[i].busy, sb->uf[i].op, sb->uf[i].fi, sb->uf[i].fj, sb->uf[i].fk, sb->uf[i].qj, sb->uf[i].qk, sb->uf[i].rj, sb->uf[i].rk);
+    }
+    printf("\n");
 
-//     printf("*-----*-----*-----*-----*-----*-----*-----*-----*\n");
-//     printf("| UF  |  B  |  Fi |  Fk |  Qj |  Qk |  Rj |  Rk |\n");
-//     printf("*-----*-----*-----*-----*-----*-----*-----*-----*\n");
+}
 
-//     for (int i = 0; i <= 4; i++) {
-//         printf("|%3s\n", uf[i]);
-//     }
+void print_tables_regs(scoreboard *sb)
+{
+    printf("Regs Tables\n");
+    printf ("|  UF  |\n");
+    for (int i = 0; i < sb->n_registers; i++) {
+        printf("|  %d  |\n", sb->regs[i].uf);
+    }
 
-//     printf("*-----*-----*-----*-----*-----*-----*-----*-----*\n");
+    printf("\n");
+}
 
-//     char regs[1][5] = {{'I', 'M','D', 'A', 'N'}};
-
-//     printf("\n\nRegistradores\n\n");
-//     printf("     *----*----*----*----*----*\n");
-//     printf("     | F0 | F1 | F2 | F4 | F10|\n");
-//     printf("     *----*----*----*----*----*\n");
-//     printf("  UF ");
-
-//     printf("%5c|%4c|%4c|%4c|%4c|", regs[0][0], regs[0][1], regs[0][2], regs[0][3], regs[0][4]);
-
-//     printf("\n");
-//     printf("     *----*----*----*----*----*\n");
-
-//     return 0;
-
-// }
+void print_tables(scoreboard *sb) {
+    print_tables_instruction(sb);
+    print_tables_ufs(sb);
+    print_tables_regs(sb);
+}

@@ -15,57 +15,47 @@ que é um mapeamento número do registrador -> uf que vai escrever, que nem a ge
 o ciclo de clock atual é guardado no struct cpu
 acho isso é td pra printar as tabelas
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "bus.h"
-#include "cpu.h"
-#include "func_unit.h"
-#include "inst_buffer.h"
-#include "memory.h"
-#include "register.h"
-#include "scoreboard.h"
-#include "sys_bus.h"
-#include "vector.h"
-#include "opcode.h"
+#include "tables_examples.h"
 
-
-void print_tables_instruction(scoreboard *sb) {
-
+void print_tables_instruction(scoreboard *sb)
+{
 
     printf("Instruction Table\n");
-    printf ("|  Fetch |  Issue  |  Read  |  Exec  |  Write  |\n");
-    for (int i = 0; i < sb->inst_size; i++) {
+    printf("|  Fetch |  Issue  |  Read  |  Exec  |  Write  |\n");
+    for (int i = 0; i < sb->inst_size; i++)
+    {
         printf("|  %d  |  %d  |  %d  |  %d  |  %d  |\n", sb->inst[i].when[STAGE_FETCH], sb->inst[i].when[STAGE_ISSUE], sb->inst[i].when[STAGE_READ_OPERANDS], sb->inst[i].when[STAGE_EXECUTION_COMPLETE], sb->inst[i].when[STAGE_WRITE_RESULTS]);
     }
     printf("\n");
-
 }
 
-void print_tables_ufs(scoreboard *sb) {
+void print_tables_ufs(scoreboard *sb)
+{
 
     printf("UFs Table\n");
-    printf ("|  Busy |  Op  |  Fi  |  Fj  |  Fk  |  Qj  |  Qk  |  Rj  |  Rk  |\n");
-    for (int i = 0; i < sb->n_ufs; i++) {
+    printf("|  Busy |  Op  |  Fi  |  Fj  |  Fk  |  Qj  |  Qk  |  Rj  |  Rk  |\n");
+    for (int i = 0; i < sb->n_ufs; i++)
+    {
 
         printf("|  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |\n", sb->uf[i].busy, sb->uf[i].op, sb->uf[i].fi, sb->uf[i].fj, sb->uf[i].fk, sb->uf[i].qj, sb->uf[i].qk, sb->uf[i].rj, sb->uf[i].rk);
     }
     printf("\n");
-
 }
 
 void print_tables_regs(scoreboard *sb)
 {
     printf("Regs Tables\n");
-    printf ("|  UF  |\n");
-    for (int i = 0; i < sb->n_registers; i++) {
+    printf("|  UF  |\n");
+    for (int i = 0; i < sb->n_registers; i++)
+    {
         printf("|  %d  |\n", sb->regs[i].uf);
     }
 
     printf("\n");
 }
 
-void print_tables(scoreboard *sb) {
+void print_tables(scoreboard *sb)
+{
     print_tables_instruction(sb);
     print_tables_ufs(sb);
     print_tables_regs(sb);

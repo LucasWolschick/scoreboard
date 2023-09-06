@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "register.h"
 #include "func_unit.h"
+#include "tables_examples.h"
 
 #define MIN_TAM_MEMO 100
 
@@ -165,6 +166,7 @@ int main(int argc, char *argv[])
     while (pipeline(c))
     {
         // TODO: printar as tabelas :)
+        print_tables(c->bus->board);
         getchar();
     }
 

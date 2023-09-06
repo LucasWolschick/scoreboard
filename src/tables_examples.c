@@ -24,7 +24,7 @@ void print_tables_instruction(scoreboard *sb)
     printf("|  Fetch |  Issue  |  Read  |  Exec  |  Write  |\n");
     for (int i = 0; i < sb->inst_size; i++)
     {
-        printf("|  %d  |  %d  |  %d  |  %d  |  %d  |\n", sb->inst[i].when[STAGE_FETCH], sb->inst[i].when[STAGE_ISSUE], sb->inst[i].when[STAGE_READ_OPERANDS], sb->inst[i].when[STAGE_EXECUTION_COMPLETE], sb->inst[i].when[STAGE_WRITE_RESULTS]);
+        printf("|%8d|%9d|%8d|%8d|%9d|\n", sb->inst[i].when[STAGE_FETCH], sb->inst[i].when[STAGE_ISSUE], sb->inst[i].when[STAGE_READ_OPERANDS], sb->inst[i].when[STAGE_EXECUTION_COMPLETE], sb->inst[i].when[STAGE_WRITE_RESULTS]);
     }
     printf("\n");
 }
@@ -37,7 +37,7 @@ void print_tables_ufs(scoreboard *sb)
     for (int i = 0; i < sb->n_ufs; i++)
     {
 
-        printf("|  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |  %d  |\n", sb->uf[i].busy, sb->uf[i].op, sb->uf[i].fi, sb->uf[i].fj, sb->uf[i].fk, sb->uf[i].qj, sb->uf[i].qk, sb->uf[i].rj, sb->uf[i].rk);
+        printf("|%7d|%6d|%6d|%6d|%6d|%6d|%6d|%6d|%6d|\n", sb->uf[i].busy, sb->uf[i].op, sb->uf[i].fi, sb->uf[i].fj, sb->uf[i].fk, sb->uf[i].qj, sb->uf[i].qk, sb->uf[i].rj, sb->uf[i].rk);
     }
     printf("\n");
 }
@@ -46,9 +46,10 @@ void print_tables_regs(scoreboard *sb)
 {
     printf("Regs Tables\n");
     printf("|  UF  |\n");
+    printf("|");
     for (int i = 0; i < sb->n_registers; i++)
     {
-        printf("|  %d  |\n", sb->regs[i].uf);
+        printf("%4d|", sb->regs[i].uf);
     }
 
     printf("\n");

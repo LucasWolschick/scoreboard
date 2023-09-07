@@ -19,7 +19,7 @@ cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions)
     c->ck = 0;
     c->bus = b;
     c->sys_bus = sb;
-    c->stall = false;
+    c->pipeline_status = PIPELINE_RUNNING;
     c->cfg = cfg;
     c->n_instructions = n_instructions;
     c->fetch_buffer = inst_buffer_init(n_instructions);
@@ -107,9 +107,15 @@ void print_instruction(uint32_t instruction)
 
 void fetch(cpu *c, scoreboard *board)
 {
-    if (c->stall)
+    if (c->pipeline_status != PIPELINE_RUNNING)
     {
         // não busca ninguém
+
+        if (c->pipeline_status == PIPELINE_UNSTALL)
+        {
+            c->pipeline_status = PIPELINE_RUNNING;
+        }
+
         return;
     }
 
@@ -151,8 +157,10 @@ void fetch(cpu *c, scoreboard *board)
     case OP_BEQ:
     case OP_BGT:
     case OP_BNE:
+        c->pipeline_status = PIPELINE_STALL;
+        break;
     case OP_EXIT:
-        c->stall = true;
+        c->pipeline_status = PIPELINE_STOP;
         break;
 
     case OP_J:
@@ -461,7 +469,7 @@ void write_results(cpu *c, scoreboard *board)
         case OP_BEQ:
         case OP_BGT:
         case OP_BNE:
-            c->stall = false;
+            c->pipeline_status = PIPELINE_UNSTALL;
             break;
         }
 
@@ -521,5 +529,5 @@ bool pipeline(cpu *c)
         }
     }
 
-    return !empty;
+    return !(c->pipeline_status == PIPELINE_STOP && empty);
 }

@@ -16,6 +16,22 @@ typedef struct bus bus;
 struct sys_bus;
 typedef struct sys_bus sys_bus;
 
+enum pipeline_status
+{
+    // executando normalmente
+    PIPELINE_RUNNING,
+
+    // busca interrompida
+    PIPELINE_STALL,
+
+    // busca sendo retomada
+    PIPELINE_UNSTALL,
+
+    // finalizou a execução
+    PIPELINE_STOP
+};
+typedef enum pipeline_status pipeline_status;
+
 typedef struct cpu
 {
     int ck;
@@ -28,7 +44,7 @@ typedef struct cpu
     inst_buffer *fetch_buffer;
 
     // para gerenciar parada no caso de aparecer um branch
-    bool stall;
+    pipeline_status pipeline_status;
 } cpu;
 
 cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions);

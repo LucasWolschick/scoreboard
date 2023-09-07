@@ -484,15 +484,52 @@ uint32_t instruction(scanner *s)
 
     case OP_ADDI:
     case OP_SUBI:
-    case OP_BLT:
-    case OP_BGT:
-    case OP_BEQ:
-    case OP_BNE:
     {
         // inst_3i <- op rt, rs, imm
         token rt = expect_token(s, TOKEN_REGISTER);
         expect_token(s, TOKEN_COMMA);
         token rs = expect_token(s, TOKEN_REGISTER);
+        expect_token(s, TOKEN_COMMA);
+
+        token imm;
+        if (peek_token(s).type == TOKEN_MINUS)
+        {
+            next_token(s);
+            imm = expect_token(s, TOKEN_NUMBER);
+            if (imm.value > INT16_MAX || imm.value <= INT16_MIN)
+            {
+                fprintf(stderr, "Erro: linha %d: numero fora do intervalo [-32768, 32767]\n", imm.line);
+                exit(1);
+            }
+            imm.value = -imm.value;
+        }
+        else
+        {
+            imm = expect_token(s, TOKEN_NUMBER);
+            if (imm.value > INT16_MAX || imm.value < INT16_MIN)
+            {
+                fprintf(stderr, "Erro: linha %d: numero fora do intervalo [-32768, 32767]\n", imm.line);
+                exit(1);
+            }
+        }
+
+        uint32_t i = 0;
+        i |= (mnemonic.value & 0x3F) << 26; // op
+        i |= (rs.value & 0x1F) << 21;       // rs
+        i |= (rt.value & 0x1F) << 16;       // rt
+        i |= (imm.value & 0xFFFF);          // imm
+        return i;
+    }
+
+    case OP_BLT:
+    case OP_BGT:
+    case OP_BEQ:
+    case OP_BNE:
+    {
+        // inst_3i <- op rs, rt, imm
+        token rs = expect_token(s, TOKEN_REGISTER);
+        expect_token(s, TOKEN_COMMA);
+        token rt = expect_token(s, TOKEN_REGISTER);
         expect_token(s, TOKEN_COMMA);
 
         token imm;
@@ -598,10 +635,12 @@ uint32_t instruction(scanner *s)
     }
 
     case OP_EXIT:
+    {
         // inst_e
         uint32_t i = 0;
         i |= (mnemonic.value & 0x3F) << 26;
         return i;
+    }
     }
 
     return -1;

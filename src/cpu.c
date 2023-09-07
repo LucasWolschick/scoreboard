@@ -195,7 +195,7 @@ void issue(cpu *c, scoreboard *board)
     }
     // address = inst.instruction & 0x1FFFFFF;
 
-    int i_type, d, s1, s2;
+    int i_type = 0, d = 0, s1 = 0, s2 = 0;
     bool is_imm = false;
     switch (opcode)
     {

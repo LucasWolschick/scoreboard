@@ -18,5 +18,7 @@ void sys_bus_destroy(sys_bus *b);
 
 uint8_t sys_bus_read_memory(sys_bus *b, uint32_t address);
 void sys_bus_write_memory(sys_bus *b, uint32_t address, uint8_t value);
+uint32_t sys_bus_read_memory_word(sys_bus *b, uint32_t address);
+void sys_bus_write_memory_word(sys_bus *b, uint32_t address, uint32_t value);
 
 #endif

@@ -108,7 +108,7 @@ void uf_load_ops(uf *u, bus *b, sys_bus *sb)
     case OP_LW:
     {
         size_t offset = bus_read_reg(b, rs) + imm;
-        uint32_t res = (sys_bus_read_memory(sb, offset) << 24) | (sys_bus_read_memory(sb, offset + 1) << 16) | (sys_bus_read_memory(sb, offset + 2) << 8) | sys_bus_read_memory(sb, offset + 3);
+        uint32_t res = sys_bus_read_memory_word(sb, offset);
         u->res = res;
         break;
     }
@@ -176,7 +176,7 @@ void uf_write_res(uf *u, bus *b, sys_bus *sb)
         break;
 
     case OP_SW:
-        sys_bus_write_memory(sb, u->res2, u->res);
+        sys_bus_write_memory_word(sb, u->res2, u->res);
         break;
 
     case OP_EXIT:

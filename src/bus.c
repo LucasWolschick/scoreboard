@@ -35,6 +35,13 @@ void bus_write_ir(bus *b, uint32_t instruction)
     register_write_ir(b->registers, instruction);
 }
 
+void bus_load_pc_ir(bus *b, sys_bus *sb)
+{
+    uint32_t pc = bus_read_pc(b);
+    uint32_t instruction = sys_bus_read_memory_word(sb, pc);
+    bus_write_ir(b, instruction);
+}
+
 uint32_t bus_read_reg(bus *b, uint8_t reg)
 {
     return register_read(b->registers, reg);

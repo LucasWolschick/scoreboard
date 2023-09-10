@@ -37,6 +37,7 @@ uint32_t bus_read_pc(bus *b);
 void bus_write_pc(bus *b, uint32_t pc);
 uint32_t bus_read_ir(bus *b);
 void bus_write_ir(bus *b, uint32_t instruction);
+void bus_load_pc_ir(bus *b, sys_bus *sb);
 uint32_t bus_read_reg(bus *b, uint8_t reg);
 void bus_write_reg(bus *b, uint8_t reg, uint32_t value);
 

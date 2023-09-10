@@ -23,3 +23,13 @@ void sys_bus_write_memory(sys_bus *b, uint32_t address, uint8_t value)
 {
     memory_write(b->memory, address, value);
 }
+
+uint32_t sys_bus_read_memory_word(sys_bus *b, uint32_t address)
+{
+    return memory_read_word(b->memory, address);
+}
+
+void sys_bus_write_memory_word(sys_bus *b, uint32_t address, uint32_t value)
+{
+    memory_write_word(b->memory, address, value);
+}

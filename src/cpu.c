@@ -10,8 +10,22 @@
 #include "bus.h"
 #include "sys_bus.h"
 
-// TODO: usar o IR
-// TODO: controlar a largura máxima de banda do barramento na hora de fazer a escrita
+/*
+    TODO: controlar a largura máxima de banda do barramento na hora de fazer a escrita
+
+        Based on its  own data structure,  the scoreboard controls  the instruction pro-
+    gression from one step to the next by communicating with the functional units. There
+    is a small complication, however.  There are only a limited number of source operand
+    buses and result buses to the register file,  which represents a structural  hazard.
+    The scoreboard must guarantee that the number of functional units allowed to proceed
+    into steps 2 (read operands)  and  4 (write results) does  not exceed the number  of
+    buses available.  We will not go into further detail on this,  other than to mention
+    that the CDC 6600  solved this problem by grouping the  16 functional units together
+    into four groups and supplying a set of buses,  called data trunks,  for each group.
+    Only one unit in a group could read its operands or write its result during a clock.
+
+    ~ HENNESSY, J; PATTERSON, H. Computer Architecture: A Quantitative Approach. (p. C-75)
+*/
 
 cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions)
 {
@@ -128,7 +142,8 @@ void fetch(cpu *c, scoreboard *board)
     int pc = bus_read_pc(c->bus);
 
     // carregar a instrução da memória e colocar na tabela inst
-    uint32_t instruction = (sys_bus_read_memory(c->sys_bus, pc) << 24) | (sys_bus_read_memory(c->sys_bus, pc + 1) << 16) | (sys_bus_read_memory(c->sys_bus, pc + 2) << 8) | (sys_bus_read_memory(c->sys_bus, pc + 3));
+    bus_load_pc_ir(c->bus, c->sys_bus);
+    uint32_t instruction = bus_read_ir(c->bus);
 
     printf("FETCH ");
     print_instruction(instruction);

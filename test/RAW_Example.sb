@@ -1,0 +1,30 @@
+/*
+    UF:
+    inteiro:1
+    add:1
+    mul:3
+    INST:
+    lw: 1
+    mul: 10
+    sub: 2
+    div: 40
+    add: 2
+*/
+
+.data
+    1000000 1000000 1000000 1000000 1000000
+    1000000 1000000 1000000 1000000 1000000
+    1000000 1000000 1000000 1000000 1000000
+    1000000 1000000 1000000 1000000 1000000
+    1000000 1000000 1000000 1000000 1000000
+
+.text
+# Exemplo de conjunto de instrucoes que tenha somente a dependencia RAW
+# entre as instrucoes
+
+    lw r0, 0(r0)
+    mul r1, r0, r0
+    sub r2, r1, r1
+    div r3, r2, r2
+    add r4, r3, r3
+    exit

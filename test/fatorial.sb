@@ -1,0 +1,51 @@
+/*
+    UF:
+    inteiro:1
+    add:1
+    mul:3
+    INST:
+    lw: 1
+    mul: 10
+    sub: 2
+    div: 40
+    add: 2
+*/
+
+.data   
+    #Resultado
+    120
+
+    #Numero que será inicializado
+    5
+
+
+.text
+    # r1 contém o número para o qual queremos calcular o fatorial
+    # r2 será usado para armazenar o resultado do fatorial
+    # r3 será usado para o contador do loop
+
+    # Carrega o número inteiro de memória
+    lw r1, 0(r0) # RAW (r1 é lido antes de ser escrito)
+
+    # Inicializa r2 com 1 (fatorial começa em 1)
+    addi r2, r0, 1 # WAW (r2 é escrito antes de ser lido)
+
+    # Inicializa r3 com 1 (contador do loop)
+    addi r3, r0, 1 # WAW (r3 é escrito antes de ser lido)
+
+    # LOOP:
+    loop:
+        # Multiplicação (depende de r2 e r3)
+        mul r2, r2, r3 # RAW (r2 é escrito antes de ser lido)
+
+        # Incrementa o contador (depende de r3)
+        addi r3, r3, 1 # RAW (r3 é escrito antes de ser lido)
+
+        # Compara o contador com o número
+        bne r3, r1, loop # WAR (r3 é lido antes de ser escrito)
+
+    # Resultado do fatorial em r2
+    sw r2, 4(r0) # WAW (r2 é escrito antes de ser lido)
+
+    # Fim do programa
+    exit

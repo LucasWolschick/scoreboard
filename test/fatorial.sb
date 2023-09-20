@@ -11,41 +11,39 @@
     add: 2
 */
 
-.data   
-    #Resultado
+.data
+    # número cujo fatorial será calculado
+    5
+    # resultado do fatorial
     120
 
-    #Numero que será inicializado
-    5
-
-
 .text
-    # r1 contém o número para o qual queremos calcular o fatorial
-    # r2 será usado para armazenar o resultado do fatorial
-    # r3 será usado para o contador do loop
+    # r1 contem o endereco de N( o numero para calcular o fatorial)
+    # r2 contem o endereco do resultado do fatorial
+    # r3 contem o valor de N
+    # r4 contem o valor do resultado do fatorial
 
-    # Carrega o número inteiro de memória
-    lw r1, 0(r0) # RAW (r1 é lido antes de ser escrito)
+    lw r1, 0(r0) # Carrega o endereco de N 
+    lw r2, 4(r0) # Carrega o endereco do resultado do fatorial
+    lw r3, 0(r1) # Carrega o valor de N em r3 
 
-    # Inicializa r2 com 1 (fatorial começa em 1)
-    addi r2, r0, 1 # WAW (r2 é escrito antes de ser lido)
+    # Inicializa o resultado do fatorial como 1
+    addi r4, r0, 1 # r4 = 1
 
-    # Inicializa r3 com 1 (contador do loop)
-    addi r3, r0, 1 # WAW (r3 é escrito antes de ser lido)
 
-    # LOOP:
-    loop:
-        # Multiplicação (depende de r2 e r3)
-        mul r2, r2, r3 # RAW (r2 é escrito antes de ser lido)
+    #Inicio do loop
+    # LOOP: (120)
+    #verifica se N <= 1, se sim, sai do loop
+    beq r3, r0, 68 # se r3 == 0 
 
-        # Incrementa o contador (depende de r3)
-        addi r3, r3, 1 # RAW (r3 é escrito antes de ser lido)
+    #Caso Contrario, multiplica o resultado pelo valor atual de N
+    mul r4, r4, r3
 
-        # Compara o contador com o número
-        bne r3, r1, loop # WAR (r3 é lido antes de ser escrito)
+    # Decrementa N 
+    subi r3, r3, 1
 
-    # Resultado do fatorial em r2
-    sw r2, 4(r0) # WAW (r2 é escrito antes de ser lido)
+    # Volta para o Inicio do loop
+    j 120
 
-    # Fim do programa
+    # Fim do loop
     exit

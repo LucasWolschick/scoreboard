@@ -1,0 +1,62 @@
+/*
+    UF:
+    inteiro:1
+    add:1
+    mul:3
+    INST:
+    lw: 1
+    mul: 10
+    sub: 2
+    div: 40
+    add: 2
+*/
+
+.data
+    1000000 1000000 1000000 1000000 1000000
+    1000000 1000000 1000000 1000000 1000000
+    1000000 1000000 1000000 1000000 1000000
+    1000000 1000000 1000000 1000000 1000000
+    1000000 1000000 1000000 1000000 1000000
+
+.text
+    # r1 contém o primeiro número
+    # r2 contém o segundo número
+    # r3 será usado para armazenar o resultado da soma
+    # r4 será usado para armazenar o resultado da multiplicação
+    # r5 será usado para armazenar o resultado da subtração
+    # r6 será usado para armazenar o resultado da operação AND
+    # r7 será usado para armazenar o resultado da operação OR
+    # r8 será usado para armazenar o resultado da operação NOT
+
+    #Carrega os números inteiros de memória
+    lw r1, 0(r0) #RAW 
+    lw r2, 4(r0) #Raw 
+
+    # Soma (depende de r1 e r2)
+    add r3, r1, r2 #WAW 
+
+    #Multiplicacao (depende de r1 e r2)
+    mul r4, r1, r2 #WAW 
+
+    #Subtracao (depende de r1 e r2)
+    sub r5, r1, r2 #WAW
+
+    #Operacao AND (depende de r3 e r4)
+    and r6, r3, r4 #RAW
+
+    #Operacao OR (depende de r4 e r5)
+    or r7, r4, r5 #RAW
+
+    #Operacao NOT (depende de r5)
+    not r8, r5 #RAW
+
+    #Resultados
+    sw r3, 8(r0) #WAW
+    sw r4, 12(r0) #WAW
+    sw r5, 16(r0) #WAW
+    sw r6, 20(r0) #RAW
+    sw r7, 24(r0) #RAW
+    sw r8, 28(r0) #RAW
+
+    #Fim
+    exit

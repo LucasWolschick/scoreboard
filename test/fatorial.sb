@@ -1,0 +1,49 @@
+/*
+    UF:
+    inteiro:1
+    add:1
+    mul:3
+    INST:
+    lw: 1
+    mul: 10
+    sub: 2
+    div: 40
+    add: 2
+*/
+
+.data
+    # número cujo fatorial será calculado
+    5
+    # resultado do fatorial
+    120
+
+.text
+    # r1 contem o endereco de N( o numero para calcular o fatorial)
+    # r2 contem o endereco do resultado do fatorial
+    # r3 contem o valor de N
+    # r4 contem o valor do resultado do fatorial
+
+    lw r1, 0(r0) # Carrega o endereco de N 
+    lw r2, 4(r0) # Carrega o endereco do resultado do fatorial
+    lw r3, 0(r1) # Carrega o valor de N em r3 
+
+    # Inicializa o resultado do fatorial como 1
+    addi r4, r0, 1 # r4 = 1
+
+
+    #Inicio do loop
+    # LOOP: (120)
+    #verifica se N <= 1, se sim, sai do loop
+    beq r3, r0, 68 # se r3 == 0 
+
+    #Caso Contrario, multiplica o resultado pelo valor atual de N
+    mul r4, r4, r3
+
+    # Decrementa N 
+    subi r3, r3, 1
+
+    # Volta para o Inicio do loop
+    j 120
+
+    # Fim do loop
+    exit

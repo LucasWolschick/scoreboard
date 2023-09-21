@@ -45,5 +45,8 @@
     # Volta para o Inicio do loop
     j 120
 
+    # Guarda o resultado do fatorial
+    sw r4, 0(r2)
+
     # Fim do loop
     exit

@@ -8,7 +8,7 @@
 #include "memory.h"
 #include "register.h"
 #include "func_unit.h"
-#include "tables_examples.h"
+#include "tables.h"
 
 #define MIN_TAM_MEMO 100
 
@@ -38,13 +38,13 @@ int main(int argc, char *argv[])
 {
     if (argc < 5)
     {
-        fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
+        fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo de saida>]\n", argv[0]);
         exit(1);
     }
 
     char *programFileName = NULL;
     int memorySize = 0;
-    // char *outputFileName = NULL;
+    char *outputFileName = NULL;
 
     for (int i = 1; i < argc; i++)
     {
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         {
             if (argc < i + 2)
             {
-                fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
+                fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo de saida>]\n", argv[0]);
                 exit(1);
             }
             programFileName = argv[i + 1];
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         {
             if (argc < i + 2)
             {
-                fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
+                fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo de saida>]\n", argv[0]);
                 exit(1);
             }
             memorySize = strtol(argv[i + 1], NULL, 10);
@@ -77,19 +77,30 @@ int main(int argc, char *argv[])
         {
             if (argc < i + 2)
             {
-                fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
+                fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo de saida>]\n", argv[0]);
                 exit(1);
             }
-            // outputFileName = argv[i + 1];
+            outputFileName = argv[i + 1];
             i++;
         }
     }
 
     if (programFileName == NULL)
     {
-        fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo>]\n", argv[0]);
+        fprintf(stderr, "Uso: %s -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo de saida>]\n", argv[0]);
         exit(1);
     }
+
+    if (outputFileName)
+    {
+        if (!freopen(outputFileName, "w", stdout))
+        {
+            perror("Erro abrindo arquivo de saida");
+            exit(1);
+        }
+    }
+
+    bool interactive = !outputFileName;
 
     char *b = file_to_string(programFileName);
     vector data, instrucoes;
@@ -162,13 +173,16 @@ int main(int argc, char *argv[])
     c->sys_bus = sys_barramento;
 
     // põe pra rodar
+    printf("** CLOCK = %d\n", c->ck);
     while (pipeline(c))
     {
-        print_tables(c->bus->board);
-        getchar();
+        print_tables(c->bus->board, c->bus->registers);
+        if (interactive)
+            getchar();
+        printf("** CLOCK = %d\n", c->ck);
     }
-    printf("resultado final:\n");
-    print_tables(c->bus->board);
+    print_tables(c->bus->board, c->bus->registers);
+    printf("** FIM (levou %d ciclos)\n", c->ck);
 
     // destroi as coisas
     sys_bus_destroy(sys_barramento);

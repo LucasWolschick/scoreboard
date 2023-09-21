@@ -23,14 +23,17 @@ scoreboard *scoreboard_init(int n_registers, config *cfg)
         if (u < cfg->n_uf_add)
         {
             status->uf[u].type = FU_ADD;
+            status->uf[u].n_type = u;
         }
         else if (u < cfg->n_uf_add + cfg->n_uf_int)
         {
             status->uf[u].type = FU_INT;
+            status->uf[u].n_type = u - cfg->n_uf_add;
         }
         else
         {
             status->uf[u].type = FU_MUL;
+            status->uf[u].n_type = u - cfg->n_uf_add - cfg->n_uf_int;
         }
         status->uf[u].busy = false;
         status->uf[u].op = 0;

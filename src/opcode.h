@@ -22,4 +22,6 @@ typedef enum opcode
     OP_EXIT
 } opcode;
 
+const char *string_from_opcode(opcode op);
+
 #endif

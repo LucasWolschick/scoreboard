@@ -20,6 +20,7 @@ typedef struct uf_status
     bool busy;
     opcode op;
     fu_type type;
+    int n_type;
 
     // registers
     int fi;

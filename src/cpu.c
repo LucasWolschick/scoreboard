@@ -47,7 +47,7 @@ void cpu_destroy(cpu *c)
     free(c);
 }
 
-void print_instruction(uint32_t instruction)
+int snprint_instruction(uint32_t instruction, char *buffer, size_t bufsz)
 {
     uint32_t opcode = instruction >> 26;
     uint32_t rs, rt, rd, imm, address;
@@ -66,57 +66,41 @@ void print_instruction(uint32_t instruction)
     switch (opcode)
     {
     case OP_ADD:
-        printf("add r%d, r%d, r%d", rd, rs, rt);
-        break;
+        return snprintf(buffer, bufsz, "add r%d, r%d, r%d", rd, rs, rt);
     case OP_ADDI:
-        printf("addi r%d, r%d, %d", rt, rs, imm);
-        break;
+        return snprintf(buffer, bufsz, "addi r%d, r%d, %d", rt, rs, imm);
     case OP_SUB:
-        printf("sub r%d, r%d, r%d", rd, rs, rt);
-        break;
+        return snprintf(buffer, bufsz, "sub r%d, r%d, r%d", rd, rs, rt);
     case OP_SUBI:
-        printf("subi r%d, r%d, %d", rt, rs, imm);
-        break;
+        return snprintf(buffer, bufsz, "subi r%d, r%d, %d", rt, rs, imm);
     case OP_MUL:
-        printf("mul r%d, r%d, r%d", rd, rs, rt);
-        break;
+        return snprintf(buffer, bufsz, "mul r%d, r%d, r%d", rd, rs, rt);
     case OP_DIV:
-        printf("div r%d, r%d, r%d", rd, rs, rt);
-        break;
+        return snprintf(buffer, bufsz, "div r%d, r%d, r%d", rd, rs, rt);
     case OP_AND:
-        printf("and r%d, r%d, r%d", rd, rs, rt);
-        break;
+        return snprintf(buffer, bufsz, "and r%d, r%d, r%d", rd, rs, rt);
     case OP_OR:
-        printf("or r%d, r%d, r%d", rd, rs, rt);
-        break;
+        return snprintf(buffer, bufsz, "or r%d, r%d, r%d", rd, rs, rt);
     case OP_NOT:
-        printf("not r%d, r%d", rd, rs);
-        break;
+        return snprintf(buffer, bufsz, "not r%d, r%d", rd, rs);
     case OP_BLT:
-        printf("blt r%d, r%d, %d", rs, rt, imm);
-        break;
+        return snprintf(buffer, bufsz, "blt r%d, r%d, %d", rs, rt, imm);
     case OP_BGT:
-        printf("bgt r%d, r%d, %d", rs, rt, imm);
-        break;
+        return snprintf(buffer, bufsz, "bgt r%d, r%d, %d", rs, rt, imm);
     case OP_BEQ:
-        printf("beq r%d, r%d, %d", rs, rt, imm);
-        break;
+        return snprintf(buffer, bufsz, "beq r%d, r%d, %d", rs, rt, imm);
     case OP_BNE:
-        printf("bne r%d, r%d, %d", rs, rt, imm);
-        break;
+        return snprintf(buffer, bufsz, "bne r%d, r%d, %d", rs, rt, imm);
     case OP_J:
-        printf("j %d", address);
-        break;
+        return snprintf(buffer, bufsz, "j %d", address);
     case OP_LW:
-        printf("lw r%d, %d(r%d)", rt, imm, rs);
-        break;
+        return snprintf(buffer, bufsz, "lw r%d, %d(r%d)", rt, imm, rs);
     case OP_SW:
-        printf("sw r%d, %d(r%d)", rt, imm, rs);
-        break;
+        return snprintf(buffer, bufsz, "sw r%d, %d(r%d)", rt, imm, rs);
     case OP_EXIT:
-        printf("exit");
-        break;
+        return snprintf(buffer, bufsz, "exit");
     }
+    return 0;
 }
 
 void fetch(cpu *c, scoreboard *board)
@@ -144,10 +128,6 @@ void fetch(cpu *c, scoreboard *board)
     // carregar a instrução da memória e colocar na tabela inst
     bus_load_pc_ir(c->bus, c->sys_bus);
     uint32_t instruction = bus_read_ir(c->bus);
-
-    printf("FETCH ");
-    print_instruction(instruction);
-    printf(" %08x\n", instruction);
 
     instruction_status inst;
     inst.instruction = instruction;
@@ -198,10 +178,6 @@ void issue(cpu *c, scoreboard *board)
 
     int i = inst_buffer_peek(c->fetch_buffer);
     instruction_status inst = *bus_sb_get_instruction(c->bus, i);
-
-    printf("ISSUE ");
-    print_instruction(inst.instruction);
-    printf(" %08x\n", inst.instruction);
 
     // decodifica
     uint32_t opcode = inst.instruction >> 26;
@@ -266,16 +242,16 @@ void issue(cpu *c, scoreboard *board)
     case OP_BGT:
     case OP_BEQ:
     case OP_BNE:
-        d = 0;
+        d = -1;
         s1 = rs;
         s2 = rt;
         i_type = FU_INT;
         break;
 
     case OP_J:
-        d = 0;
-        s1 = 0;
-        s2 = 0;
+        d = -1;
+        s1 = -1;
+        s2 = -1;
         i_type = FU_INT;
         break;
 
@@ -289,19 +265,17 @@ void issue(cpu *c, scoreboard *board)
         break;
 
     case OP_EXIT:
-        d = 0;
-        s1 = 0;
-        s2 = 0;
+        d = -1;
+        s1 = -1;
+        s2 = -1;
         i_type = FU_INT;
         break;
     }
 
     // verifica se o registrador-resultado não está marcado para receber
     // um valor de outra UF
-    if (bus_sb_get_register_status(c->bus, d)->uf != -1)
+    if (d != -1 && bus_sb_get_register_status(c->bus, d)->uf != -1)
     {
-        puts("reg destino ocupado");
-        printf("Ocupado pela UF: %d\n", bus_sb_get_register_status(c->bus, d)->uf);
         return;
     }
 
@@ -318,12 +292,12 @@ void issue(cpu *c, scoreboard *board)
 
     if (uf == -1)
     {
-        puts("nao encontrou uf");
         return;
     }
 
     // nesse caso, a gente emite
-    board->regs[d].uf = uf;
+    if (d != -1)
+        board->regs[d].uf = uf;
 
     uf_status *uf_s = &board->uf[uf];
     uf_s->busy = true;
@@ -331,12 +305,12 @@ void issue(cpu *c, scoreboard *board)
     uf_s->fi = d;
     uf_s->fj = s1;
     uf_s->fk = s2;
-    uf_s->qj = bus_sb_get_register_status(c->bus, s1)->uf;
-    uf_s->rj = bus_sb_get_register_status(c->bus, s1)->uf == -1;
+    uf_s->qj = s1 != -1 ? bus_sb_get_register_status(c->bus, s1)->uf : -1;
+    uf_s->rj = s1 == -1 || bus_sb_get_register_status(c->bus, s1)->uf == -1;
     if (!is_imm)
     {
-        uf_s->qk = bus_sb_get_register_status(c->bus, s2)->uf;
-        uf_s->rk = bus_sb_get_register_status(c->bus, s2)->uf == -1;
+        uf_s->qk = s2 != -1 ? bus_sb_get_register_status(c->bus, s2)->uf : -1;
+        uf_s->rk = s2 == -1 || bus_sb_get_register_status(c->bus, s2)->uf == -1;
     }
     else
     {
@@ -368,10 +342,6 @@ void read_operands(cpu *c, scoreboard *board)
             continue;
         }
 
-        printf("R.OPS ");
-        print_instruction(inst.instruction);
-        printf(" %08x\n", inst.instruction);
-
         // se os dois operandos estão prontos...
         uf_status *uf_s = bus_sb_get_func_unit_status(c->bus, inst.uf);
         if (uf_s->rj && uf_s->rk)
@@ -381,6 +351,10 @@ void read_operands(cpu *c, scoreboard *board)
             // manda executar
             uf_s->rj = false;
             uf_s->rk = false;
+
+            // limpa ufs origem
+            uf_s->qj = -1;
+            uf_s->qk = -1;
 
             // lê os operandos e despacha para a UF
             bus_func_unit_load_ops(c->bus, inst.uf, c->sys_bus);
@@ -404,10 +378,6 @@ void execution_complete(cpu *c, scoreboard *board)
         {
             continue;
         }
-
-        printf("EXE.C ");
-        print_instruction(inst.instruction);
-        printf(" %08x\n", inst.instruction);
 
         // a UF está pronta se o clock atual - o clock em que ela concluiu a leitura de operandos
         // for maior ou igual ao tempo de execução dela
@@ -433,10 +403,6 @@ void write_results(cpu *c, scoreboard *board)
             continue;
         }
 
-        printf("W.RES ");
-        print_instruction(inst.instruction);
-        printf(" %08x\n", inst.instruction);
-
         uf_status *uf_uf_status = bus_sb_get_func_unit_status(c->bus, inst.uf);
 
         // verifica a condição
@@ -445,12 +411,14 @@ void write_results(cpu *c, scoreboard *board)
         for (int f = 0; f < c->bus->board->n_ufs; f++)
         {
             uf_status *f_uf_status = bus_sb_get_func_unit_status(c->bus, f);
-
-            if (!((f_uf_status->fj != uf_uf_status->fi || f_uf_status->rj == false) &&
-                  (f_uf_status->fk != uf_uf_status->fi || f_uf_status->rk == false)))
+            if (uf_uf_status->fi != -1)
             {
-                condition = false;
-                break;
+                if (!((f_uf_status->fj != uf_uf_status->fi || f_uf_status->rj == false) &&
+                      (f_uf_status->fk != uf_uf_status->fi || f_uf_status->rk == false)))
+                {
+                    condition = false;
+                    break;
+                }
             }
         }
 
@@ -464,11 +432,11 @@ void write_results(cpu *c, scoreboard *board)
         {
             uf_status *f_uf_status = &board->uf[f];
 
-            if (f_uf_status->qj == inst.uf)
+            if (inst.uf != -1 && f_uf_status->qj == inst.uf)
             {
                 f_uf_status->rj = true;
             }
-            if (f_uf_status->qk == inst.uf)
+            if (inst.uf != -1 && f_uf_status->qk == inst.uf)
             {
                 f_uf_status->rk = true;
             }
@@ -490,7 +458,8 @@ void write_results(cpu *c, scoreboard *board)
 
         // limpa
         int reg_target = bus_sb_get_func_unit_status(c->bus, inst.uf)->fi;
-        board->regs[reg_target].uf = -1;
+        if (reg_target != -1)
+            board->regs[reg_target].uf = -1;
 
         board->uf[inst.uf] = (uf_status){
             .busy = false,
@@ -515,9 +484,6 @@ void write_results(cpu *c, scoreboard *board)
 
 bool pipeline(cpu *c)
 {
-
-    printf("ck = %d\n", c->ck);
-
     scoreboard *next_board = scoreboard_copy(c->bus->board);
 
     write_results(c, next_board);

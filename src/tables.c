@@ -225,6 +225,23 @@ void print_tables_regs(scoreboard *sb)
     printf("\n");
 }
 
+void print_tables_regs_f(scoreboard *sb, register_bank *r)
+{
+    printf("*-------------------------*\n");
+    printf("| TABELA DE REGISTRADORES |\n");
+    printf("*------*------------------*\n");
+    printf("|      |        Valor     |\n");
+    printf("*------*------------------*\n");
+    for (int i = 0; i < N_REGISTERS; i++)
+    {
+        printf("|  R%-2d |", i);
+        printf(" %16s |", register_read(r, i));
+        printf("\n");
+    }
+    printf("*------*------------------*\n");
+    printf("\n");
+}
+
 void print_tables(scoreboard *sb, register_bank *regs)
 {
     print_tables_instruction(sb);

@@ -13,9 +13,9 @@
 
 .data
     # número cujo fatorial será calculado
-    5
+    6
     # resultado do fatorial
-    120
+    720
 
 .text
     # r1 contem o endereco de N( o numero para calcular o fatorial)

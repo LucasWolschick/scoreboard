@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
     }
     print_tables(c->bus->board, c->bus->registers);
     printf("** FIM (levou %d ciclos)\n", c->ck);
+    print_tables_regs_f(c->bus->board, c->bus->registers);
 
     // destroi as coisas
     sys_bus_destroy(sys_barramento);

@@ -29,34 +29,34 @@
     # r8 será usado para armazenar o resultado da operação NOT
 
     #Carrega os números inteiros de memória
-    lw r1, 0(r0) #RAW 
-    lw r2, 4(r0) #Raw 
+    lw r1, 0(r0) 
+    lw r2, 4(r0) 
 
     # Soma (depende de r1 e r2)
-    add r3, r1, r2 #WAW 
+    add r3, r1, r2 
 
     #Multiplicacao (depende de r1 e r2)
-    mul r4, r1, r2 #WAW 
+    mul r4, r1, r2 
 
     #Subtracao (depende de r1 e r2)
-    sub r5, r1, r2 #WAW
+    sub r4, r1, r7
 
     #Operacao AND (depende de r3 e r4)
-    and r6, r3, r4 #RAW
+    and r6, r3, r4 
 
     #Operacao OR (depende de r4 e r5)
-    or r7, r4, r5 #RAW
+    or r7, r4, r5 
 
     #Operacao NOT (depende de r5)
-    not r8, r5 #RAW
+    not r8, r5 
 
     #Resultados
-    sw r3, 8(r0) #WAW
-    sw r4, 12(r0) #WAW
-    sw r5, 16(r0) #WAW
-    sw r6, 20(r0) #RAW
-    sw r7, 24(r0) #RAW
-    sw r8, 28(r0) #RAW
+    sw r3, 8(r0)
+    sw r4, 12(r0) 
+    sw r4, 16(r0) 
+    sw r6, 20(r0) 
+    sw r7, 24(r0) 
+    sw r8, 28(r0) 
 
     #Fim
     exit

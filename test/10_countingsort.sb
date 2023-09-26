@@ -1,0 +1,83 @@
+/*
+    UF:
+    inteiro:3
+    add:1
+    mul:3
+    INST:
+    lw: 1
+    mul: 1
+    sub: 1
+    div: 1
+    add: 1
+*/
+
+
+.data
+
+    # tamanho do vetor
+    9
+
+    # vetor a ser ordenado
+    10 9 8 5 3 2 45 0 1
+
+    
+
+.text
+    # r1 vai armazenar o valor de i 
+    # r2 vai armazenar o valor de key
+    # r3 vai armazenar o valor de j 
+    # r4 vai armazenar o valor de n
+    # r5 vai armazenar o valor atual do vetor
+    
+    addi i, r0, 4
+
+    # Inicio do LOOP:
+    lw n, 0(r0)
+    mul n, n, 4
+
+    # if i < n
+    beq i, n, ELSE
+
+    # key = arr[i]
+    lw key, 4(i)
+
+    # j = i - 1
+    subi j, i, 4
+
+    # while
+    # j >= 0 && arr[j] > key
+
+    blt j, r0, FIM-while
+    lw X, 4(j) # arr[j]
+    bgt X, key, FIM-while
+    beq X, key, FIM-while
+
+    # arr[j+1] = arr[j]
+    lw X, 4(j)
+    sw X, 8(j)
+
+    # j = j - 1
+    subi j, j, 4
+
+    j while
+    # FIM-while:
+
+    # arr[j+1] = key
+    sw key, 8(j)
+
+    addi i, i, 4
+
+    j LOOP
+    #Fim-for
+
+    exit
+
+
+
+
+
+
+
+    
+
+    

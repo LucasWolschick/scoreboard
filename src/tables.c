@@ -244,15 +244,32 @@ void print_tables_regs_f(scoreboard *sb, register_bank *r)
 
 void print_memory(memory *m)
 {
+    printf("*------------------------------------------------------------*\n");
+    printf("| ESTADO DA MEMORIA                                          |\n");
+    printf("*----------*-------------------------------------------------*\n");
+    printf("| Endereco | Valores                                         |\n");
+    printf("*----------*-------------------------------------------------*\n");
     for (int i = 0; i < m->length; i++)
     {
         if (i % 16 == 0)
         {
-            printf("\n");
-            printf("%08x: ", i);
+            printf("| %08x | ", i);
         }
         printf("%02x ", memory_read(m, i));
+        if (i % 16 == 15)
+        {
+            printf("|\n");
+        }
     }
+    if (m->length % 16 != 0)
+    {
+        for (int i = 0; i < 16 - (m->length % 16); i++)
+        {
+            printf("   ");
+        }
+        printf("|\n");
+    }
+    printf("*----------*-------------------------------------------------*\n");
     printf("\n");
 }
 

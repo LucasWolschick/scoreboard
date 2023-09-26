@@ -1,8 +1,8 @@
 /*
     UF:
-    inteiro:1
-    add:1
-    mul:3
+    inteiro: 2
+    add: 2
+    mul: 2
     INST:
     lw: 1
     mul: 10
@@ -12,12 +12,8 @@
 */
 
 .data
-    1000000 1000000 1000000 1000000 1000000
-    1000000 1000000 1000000 1000000 1000000
-    1000000 1000000 1000000 1000000 1000000
-    1000000 1000000 1000000 1000000 1000000
-    1000000 1000000 1000000 1000000 1000000
-
+    10
+    20
 .text
     # r1 contém o primeiro número
     # r2 contém o segundo número
@@ -28,26 +24,26 @@
     # r7 será usado para armazenar o resultado da operação OR
     # r8 será usado para armazenar o resultado da operação NOT
 
-    #Carrega os números inteiros de memória
+    #Carrega os números inteiros da memória
     lw r1, 0(r0) 
     lw r2, 4(r0) 
 
     # Soma (depende de r1 e r2)
     add r3, r1, r2 
 
-    #Multiplicacao (depende de r1 e r2)
+    # Multiplicação (depende de r1 e r2)
     mul r4, r1, r2 
 
-    #Subtracao (depende de r1 e r2)
+    #Subtração (depende de r1 e r2)
     sub r4, r1, r7
 
-    #Operacao AND (depende de r3 e r4)
+    #Operação AND (depende de r3 e r4)
     and r6, r3, r4 
 
-    #Operacao OR (depende de r4 e r5)
+    #Operação OR (depende de r4 e r5)
     or r7, r4, r5 
 
-    #Operacao NOT (depende de r5)
+    #Operação NOT (depende de r5)
     not r8, r5 
 
     #Resultados

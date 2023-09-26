@@ -173,6 +173,8 @@ int main(int argc, char *argv[])
     c->sys_bus = sys_barramento;
 
     // põe pra rodar
+    printf("** ESTADO INICIAL DA MEMORIA:\n");
+    print_memory(c->sys_bus->memory);
     printf("** CLOCK = %d\n", c->ck);
     while (pipeline(c))
     {

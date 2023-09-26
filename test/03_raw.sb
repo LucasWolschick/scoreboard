@@ -12,25 +12,13 @@
 */
 
 .data
-    1000000 1000000 1000000 1000000 1000000
-    1000000 1000000 1000000 1000000 1000000
-    1000000 1000000 1000000 1000000 1000000
-    1000000 1000000 1000000 1000000 1000000
-    1000000 1000000 1000000 1000000 1000000
-
 .text
-# Exemplo de conjunto de instrucoes que tenha somente a dependencia RAW
-# entre as instrucoes
+    # Exemplo de conjunto de instruções que tenha somente a dependência RAW
+    # entre as instruções
 
-    lw r8, 4(r0)
-    lw r5, 8(r0)
     mul r1, r8, r8
     sub r2, r5, r1 
     div r3, r2, r2
     add r4, r3, r3
 
-    sw r1, 8(r0)
-    sw r2, 12(r0)
-    sw r3, 16(r0)
-    sw r4, 20(r0)
     exit

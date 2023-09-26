@@ -25,12 +25,18 @@
     Only one unit in a group could read its operands or write its result during a clock.
 
     ~ HENNESSY, J; PATTERSON, H. Computer Architecture: A Quantitative Approach. (p. C-75)
+
+    ideia:
+    - fazer tipo uma divisão em grupos "shell sort" das unidades funcionais
+    - número de unidades funcionais por grupo parametrizável
+    - cada grupo de unidades funcionais possui 2 barramentos de leitura e 1 de escrita
 */
 
 cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions)
 {
     cpu *c = malloc(sizeof(cpu));
     c->ck = 0;
+    c->uf_cycle = 0;
     c->bus = b;
     c->sys_bus = sb;
     c->pipeline_status = PIPELINE_RUNNING;
@@ -342,6 +348,12 @@ void read_operands(cpu *c, scoreboard *board)
             continue;
         }
 
+        // se a UF pode fazer a leitura neste ponto...
+        if (c->uf_cycle != (inst.uf % c->cfg.ufs_per_group))
+        {
+            continue;
+        }
+
         // se os dois operandos estão prontos...
         uf_status *uf_s = bus_sb_get_func_unit_status(c->bus, inst.uf);
         if (uf_s->rj && uf_s->rk)
@@ -399,6 +411,12 @@ void write_results(cpu *c, scoreboard *board)
         instruction_status inst = *bus_sb_get_instruction(c->bus, i);
 
         if (inst.st != STAGE_WRITE_RESULTS)
+        {
+            continue;
+        }
+
+        // se a UF pode fazer escrita nesse ponto...
+        if (c->uf_cycle != (inst.uf % c->cfg.ufs_per_group))
         {
             continue;
         }
@@ -490,6 +508,12 @@ void write_results_2(cpu *c, scoreboard *board)
         instruction_status inst = *bus_sb_get_instruction(c->bus, i);
 
         if (inst.st != STAGE_WRITE_RESULTS)
+        {
+            continue;
+        }
+
+        // se a UF pode fazer escrita nesse ponto...
+        if (c->uf_cycle != (inst.uf % c->cfg.ufs_per_group))
         {
             continue;
         }
@@ -588,6 +612,7 @@ bool pipeline(cpu *c)
     c->bus->board = next_board;
 
     c->ck++;
+    c->uf_cycle = (c->uf_cycle + 1) % c->cfg.ufs_per_group;
 
     // checa se a pipeline está vazia
     size_t n_insts = bus_sb_n_instructions(c->bus);

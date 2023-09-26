@@ -12,6 +12,9 @@ typedef struct config
 
     // ciclos por instrucao
     int ck_instruction[OP_EXIT + 1];
+
+    // unidades funcionai por grupo
+    int ufs_per_group;
 } config;
 
 #endif

@@ -36,6 +36,7 @@ typedef struct cpu
 {
     int ck;
     int n_instructions;
+    int uf_cycle;
     config cfg;
 
     bus *bus;

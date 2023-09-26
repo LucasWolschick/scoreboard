@@ -1,6 +1,5 @@
 #include "parser.h"
 
-
 /*
  * next_char recebe um scanner e retorna o próximo caractere do scanner.
  */
@@ -64,7 +63,6 @@ token scan_number(scanner *s)
     t.value = val;
     return t;
 }
-
 
 /*
  * cmp_token recebe um token e uma string e retorna True se o token e a string são iguais.
@@ -485,6 +483,10 @@ token peek_token(scanner *s)
     return next_token(&s2);
 }
 
+/*
+ * expect_token recebe um scanner e um tipo de token, retornando o próximo token do scanner.
+ * Se o token não for do tipo especificado, o programa é encerrado.
+ */
 token expect_token(scanner *s, token_type type)
 {
     token t = peek_token(s);
@@ -499,6 +501,12 @@ token expect_token(scanner *s, token_type type)
     return next_token(s);
 }
 
+/*
+ * instruction() recebe como parâmetro um scanner por referência, fazendo a leitura
+ * de uma instrução com relação ao scanner passado. Caso algum elemento da instrução
+ * seja inválido, o programa é encerrado. Caso contrário, a instrução é retornada
+ * no formato de um número de 32 bits.
+ */
 uint32_t instruction(scanner *s)
 {
     token mnemonic = expect_token(s, TOKEN_MNEMONIC);
@@ -691,6 +699,12 @@ uint32_t instruction(scanner *s)
     return -1;
 }
 
+/*
+ * decl_uf() recebe como parâmetro um scanner e uma configuração, fazendo a leitura
+ * do operando de uma instrução e defininido a quantidade de unidades funcionais
+ * que o processador possui para aquela operação. Se o token lido não for um operando
+ * nada é feito.
+ */
 void decl_uf(scanner *s, config *c)
 {
     token t = next_token(s);
@@ -730,6 +744,11 @@ void decl_uf(scanner *s, config *c)
     }
 }
 
+/*
+ * decl_inst() recebe como parâmetro um scanner e uma configuração, fazendo a leitura
+ * de uma instrução e defininido o número de ciclos de clock necessários para a
+ * execução da operação lida. Se o token lido não for um operando nada é feito.
+ */
 void decl_inst(scanner *s, config *c)
 {
     if (peek_token(s).type == TOKEN_MNEMONIC)
@@ -744,6 +763,12 @@ void decl_inst(scanner *s, config *c)
     }
 }
 
+/*
+ * comment() recebe como parâmetro um scanner e retorna uma configuração, fazendo a leitura
+ * de um comentário e defininido a quantidade de unidades funcionais que o processador
+ * possui para cada operação, bem como o número de ciclos de clock necessários para a
+ * execução de cada instrução. Se o token lido não for um comentário, o programa é encerrado.
+ */
 config comment(scanner *s)
 {
     config c;
@@ -785,6 +810,11 @@ config comment(scanner *s)
     return c;
 }
 
+/*
+ * data_entry() recebe como parâmetro um scanner e um vetor, fazendo a leitura
+ * de um número e adicionando-o ao vetor de dados do programa. Se o token lido
+ * não for um número nada é feito.
+ */
 void data_entry(scanner *s, vector *v)
 {
     token t = peek_token(s);
@@ -807,6 +837,11 @@ void data_entry(scanner *s, vector *v)
     }
 }
 
+/*
+ * data_section() recebe como parâmetro um scanner e retorna um vetor de números,
+ * fazendo a leitura de uma seção de dados e adicionando os números lidos ao vetor.
+ * Se o token lido não for uma seção de dados, o programa é encerrado.
+ */
 vector data_section(scanner *s)
 {
     token t = expect_token(s, TOKEN_SECTION);
@@ -823,6 +858,12 @@ vector data_section(scanner *s)
     return v;
 }
 
+/*
+ * text_section() recebe como parâmetro um scanner e retorna um vetor de números,
+ * números esses que são as instruções convertidas para uint32_t, fazendo a
+ * leitura de uma seção de texto e adicionando as instruções lidas ao vetor.
+ * Se o token lido não for uma seção de texto, o programa é encerrado.
+ */
 vector text_section(scanner *s)
 {
     token t = expect_token(s, TOKEN_SECTION);
@@ -845,31 +886,13 @@ vector text_section(scanner *s)
     return v;
 }
 
+/*
+ * parse() recebe como parâmetro uma string, um vetor de números, um vetor de números
+ * e uma configuração, fazendo a leitura de um programa e armazenando os dados lidos
+ * nos vetores e na configuração.
+ */
 void parse(const char *src, vector *data_vector, vector *inst_vector, config *config_out)
 {
-    // src -> comment data_section '.text' inst*
-    //
-    // data_section -> '.data' number*
-    //
-    // text_section -> '.text' inst*
-    //
-    // comment -> '/*' ('UF' ':' decl_uf | 'INST' ':' decl_inst)* '*/'
-    //
-    // decl_uf -> 'add' ':' number decl_uf? | 'mul' ':' number decl_uf? | 'inteiro' ':' number decl_uf?
-    //
-    // decl_inst -> opcode ':' number decl_inst?
-    //
-    // inst -> inst_3r | inst_3i | inst_2r | inst_j | inst_m | inst_e
-    // inst_3r -> ('add' | 'sub' | 'mul' | 'div' | 'and' | 'or') reg ',' reg ',' reg
-    // inst_3i -> ('addi' | 'subi' | 'blt' | 'bgt' | 'beq' | 'bne') reg ',' reg ',' number
-    // inst_2r -> 'not' reg ',' reg
-    // inst_j -> 'j' number
-    // inst_m -> ('lw' | 'sw') reg ',' number '(' reg ')'
-    // inst_e -> 'exit'
-    //
-    // reg -> REGISTRADOR
-    // number -> NUMBER
-
     scanner s;
     s.current = src;
     s.start = src;

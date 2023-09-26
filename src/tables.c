@@ -1,25 +1,11 @@
-/*
-o inst é um vetor de informações por instrução
-tem inst_size instruções nele
-daí, dentro de cada instrução
-tem os dados lá do scoreboard tal
-tem um vetor em cada instrução, when, que relaciona o estágio do pipeline com o ciclo de clock que o estágio foi finalizado
-tem como vc saber qual é o próximo estágio que ele vai executar pelo stage
-daí lá guarda também a instrução codificada em um int de 32 bits sem sinal
-vc pode ver o código print_instruction no cpu.c pra ver como extrair os campos daquele número
-ok, o vetor uf tem n_ufs unidades funcionais e cada struct representa uma unidade funcional
-tem os campos lá, eles são exatamente o que a gente viu em sala
-guarda o opcode que tá executando também
-por fim, tem o vetor regs
-que é um mapeamento número do registrador -> uf que vai escrever, que nem a gente viu na sala
-o ciclo de clock atual é guardado no struct cpu
-acho isso é td pra printar as tabelas
-*/
 #include "tables.h"
 #include "opcode.h"
 #include "register.h"
 #include "cpu.h"
 
+/* print_tables_instruction() recebe como parâmetro um scoreboard e imprime a
+ * tabela de instruções com base no estado atual do scoreboard.
+ */
 void print_tables_instruction(scoreboard *sb)
 {
     char ibuf[20] = {0};
@@ -58,6 +44,9 @@ void print_tables_instruction(scoreboard *sb)
     printf("\n");
 }
 
+/* print_tables_ufs() recebe como parâmetro um scoreboard e imprime a tabela
+ * de unidades funcionais com base no estado atual do scoreboard.
+ */
 void print_tables_ufs(scoreboard *sb, register_bank *regs)
 {
     const char values[2] = {'F', 'V'};
@@ -189,6 +178,10 @@ void print_tables_ufs(scoreboard *sb, register_bank *regs)
     printf("\n");
 }
 
+/* print_tables_regs() recebe como parâmetro um scoreboard e imprime a tabela
+ * de registradores, mais especificamente qual a unidade funcional que gerou o
+ * resultado armazenado em cada registrador, com base no estado atual do scoreboard.
+ */
 void print_tables_regs(scoreboard *sb)
 {
     printf("*-------------------------*\n");
@@ -225,6 +218,10 @@ void print_tables_regs(scoreboard *sb)
     printf("\n");
 }
 
+/* print_tables_regs_f() recebe como parâmetro um scoreboard e imprime a tabela
+ * de registradores, mais especificamente qual o valor concreto armazenado em cada
+ * registrador, com base no estado atual do scoreboard.
+ */
 void print_tables_regs_f(scoreboard *sb, register_bank *r)
 {
     printf("*-------------------------*\n");
@@ -242,6 +239,9 @@ void print_tables_regs_f(scoreboard *sb, register_bank *r)
     printf("\n");
 }
 
+/* print_memory() recebe como parâmetro uma memória e imprime o estado atual
+ * da memória, o que inclui o endereço da memória e o valor armazenado.
+ */
 void print_memory(memory *m)
 {
     printf("*------------------------------------------------------------*\n");
@@ -273,6 +273,11 @@ void print_memory(memory *m)
     printf("\n");
 }
 
+/* print_tables() recebe como parâmetro um scoreboard e um banco de registradores
+ * e imprime as tabelas que demonstram o estado do scoreboard em um ciclo de clock
+ * específico (tabela de instruções, tabela de unidades funcionais e tabela de
+ * registradores) com base no estado atual do scoreboard.
+ */
 void print_tables(scoreboard *sb, register_bank *regs)
 {
     print_tables_instruction(sb);

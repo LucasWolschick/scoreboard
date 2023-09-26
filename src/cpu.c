@@ -11,27 +11,10 @@
 #include "sys_bus.h"
 
 /*
-    TODO: controlar a largura máxima de banda do barramento na hora de fazer a escrita
-
-        Based on its  own data structure,  the scoreboard controls  the instruction pro-
-    gression from one step to the next by communicating with the functional units. There
-    is a small complication, however.  There are only a limited number of source operand
-    buses and result buses to the register file,  which represents a structural  hazard.
-    The scoreboard must guarantee that the number of functional units allowed to proceed
-    into steps 2 (read operands)  and  4 (write results) does  not exceed the number  of
-    buses available.  We will not go into further detail on this,  other than to mention
-    that the CDC 6600  solved this problem by grouping the  16 functional units together
-    into four groups and supplying a set of buses,  called data trunks,  for each group.
-    Only one unit in a group could read its operands or write its result during a clock.
-
-    ~ HENNESSY, J; PATTERSON, H. Computer Architecture: A Quantitative Approach. (p. C-75)
-
-    ideia:
-    - fazer tipo uma divisão em grupos "shell sort" das unidades funcionais
-    - número de unidades funcionais por grupo parametrizável
-    - cada grupo de unidades funcionais possui 2 barramentos de leitura e 1 de escrita
-*/
-
+ *cpu_init() inicializa a cpu, recebendo como parâmetro o barramento, o barraento
+ *do sistema, a configuração e o número de instruções a serem executadas. o retorno
+ * é um ponteiro para a cpu.
+ */
 cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions)
 {
     cpu *c = malloc(sizeof(cpu));
@@ -47,12 +30,22 @@ cpu *cpu_init(bus *b, sys_bus *sb, config cfg, int n_instructions)
     return c;
 }
 
+/*
+ *cpu_destroy() destroi a instância da cpu, recebendo como parâmetro um ponteiro
+ *para a cpu.
+ */
 void cpu_destroy(cpu *c)
 {
     inst_buffer_destroy(c->fetch_buffer);
     free(c);
 }
 
+/*
+ *snprint_instruction() faz a conversão de uma instrução em binário para a sua
+ * equivalente em Assembly para ser escrito nas tabelas de log. Recebe como entrada
+ * a instrução em binário, um buffer para armazenar a instrução em Assembly e o
+ * tamanho do buffer utilizado.
+ */
 int snprint_instruction(uint32_t instruction, char *buffer, size_t bufsz)
 {
     uint32_t opcode = instruction >> 26;
@@ -109,6 +102,11 @@ int snprint_instruction(uint32_t instruction, char *buffer, size_t bufsz)
     return 0;
 }
 
+/*
+ * fetch() faz a busca da próxima instrução a ser inserida no pipeline. Recebendo
+ * como parâmetros um ponteiro para a cpu utilizada e um ponteiro para o scoreboarding,
+ * já que esse deve ser análisado para verificar se a instrução pode ser buscada.
+ */
 void fetch(cpu *c, scoreboard *board)
 {
     if (c->pipeline_status != PIPELINE_RUNNING)
@@ -173,6 +171,11 @@ void fetch(cpu *c, scoreboard *board)
         break;
     }
 }
+
+/* issue() faz a emissão das instrução no pipeline. Recebendo como parâmetros a
+ * cpu utilizada e o scoreboard. A função também faz a verificação se a instrução pode
+ * ser emitida ou não. Recebe como parâmetro ponteiros para a cpu e o scoreboard utilizados.
+ */
 
 void issue(cpu *c, scoreboard *board)
 {
@@ -335,6 +338,11 @@ void issue(cpu *c, scoreboard *board)
     bus_func_unit_load_instruction(c->bus, uf, inst.instruction);
 }
 
+/* read_operand() faz a etapa da leitura dos operandos. Ela verifica a etapa de
+ * todas as instruções no pipeline, e aquelas que estiverem nesse estágio tem
+ * seus operandos lidos e despachados para a unidade funcional. Recebe como
+ * parâmetros ponteiros para a cpu e o scoreboard utilizados.
+ */
 void read_operands(cpu *c, scoreboard *board)
 {
     // para cada instrução...
@@ -378,6 +386,12 @@ void read_operands(cpu *c, scoreboard *board)
     }
 }
 
+/* execution_complete() verifica se a execução da instrução foi completada, que
+ * na simulação é quando o número de clocks atual da verificação menos o número
+ * do clock de início de execução da instrução é igual ou maior que o números
+ * de ciclos de clock necessários para a execução da instrução. Recebe como
+ * parâmetros ponteiros para a cpu e o scoreboard utilizados.
+ */
 void execution_complete(cpu *c, scoreboard *board)
 {
     // para cada instrução...
@@ -403,6 +417,12 @@ void execution_complete(cpu *c, scoreboard *board)
     }
 }
 
+/* write_results() faz a primeira etapa da escrita dos resultados pra finalizar a
+ * instrução. A escrita é dividida em duas etapas para tratar um problema de stall
+ * na dependencia de dados, em específico no caso de branches condicionais que
+ * pode levar a loops indesejados na execução. Recebe como parâmetros ponteiros para
+ * a cpu e o scoreboard utilizados.
+ */
 void write_results(cpu *c, scoreboard *board)
 {
     size_t n_insts = bus_sb_n_instructions(c->bus);
@@ -445,21 +465,6 @@ void write_results(cpu *c, scoreboard *board)
             continue;
         }
 
-        // escreve o resultado
-        // for (int f = 0; f < (c->cfg.n_uf_add + c->cfg.n_uf_int + c->cfg.n_uf_mul); f++)
-        // {
-        //     uf_status *f_uf_status = &board->uf[f];
-
-        //     if (inst.uf != -1 && f_uf_status->qj == inst.uf)
-        //     {
-        //         f_uf_status->rj = true;
-        //     }
-        //     if (inst.uf != -1 && f_uf_status->qk == inst.uf)
-        //     {
-        //         f_uf_status->rk = true;
-        //     }
-        // }
-
         bus_func_unit_write_res(c->bus, inst.uf, c->sys_bus);
 
         // resolve o stall no caso da instrução ser um branch condicional
@@ -473,33 +478,14 @@ void write_results(cpu *c, scoreboard *board)
             c->pipeline_status = PIPELINE_UNSTALL;
             break;
         }
-
-        // limpa
-        // int reg_target = bus_sb_get_func_unit_status(c->bus, inst.uf)->fi;
-        // if (reg_target != -1)
-        //     board->regs[reg_target].uf = -1;
-
-        // board->uf[inst.uf] = (uf_status){
-        //     .busy = false,
-        //     .op = -1,
-        //     .type = bus_sb_get_func_unit_status(c->bus, inst.uf)->type,
-
-        //     .fi = -1,
-        //     .fj = -1,
-        //     .fk = -1,
-
-        //     .qj = -1,
-        //     .qk = -1,
-
-        //     .rj = false,
-        //     .rk = false};
-
-        // instruction_status *inst_s = &board->inst[i];
-        // inst_s->st = STAGE_DONE;
-        // inst_s->when[STAGE_WRITE_RESULTS] = c->ck;
     }
 }
 
+/* write_results_2() faz a segunda etapa da escrita dos resultados. Nessa etapa,
+ * com o stall tratado pela etapa anterior, a escrita dos resultados é efetivada e
+ * a unidade funcional é liberada para outras instruções poderem utiliza-las.
+ * Recebe como parâmetros ponteiros para a cpu e o scoreboard utilizados.
+ */
 void write_results_2(cpu *c, scoreboard *board)
 {
     size_t n_insts = bus_sb_n_instructions(c->bus);
@@ -557,21 +543,6 @@ void write_results_2(cpu *c, scoreboard *board)
             }
         }
 
-        // bus_func_unit_write_res(c->bus, inst.uf, c->sys_bus);
-
-        // // resolve o stall no caso da instrução ser um branch condicional
-        // int opcode = inst.instruction >> 26;
-        // switch (opcode)
-        // {
-        // case OP_BLT:
-        // case OP_BEQ:
-        // case OP_BGT:
-        // case OP_BNE:
-        //     c->pipeline_status = PIPELINE_UNSTALL;
-        //     break;
-        // }
-
-        // limpa
         int reg_target = bus_sb_get_func_unit_status(c->bus, inst.uf)->fi;
         if (reg_target != -1)
             board->regs[reg_target].uf = -1;
@@ -597,6 +568,12 @@ void write_results_2(cpu *c, scoreboard *board)
     }
 }
 
+/* pipeline() faz a execução de um ciclo do pipeline, chamando todas as funções
+ * necessárias para a execução de um ciclo. Recebe como parâmetro um ponteiro para
+ * a cpu utilizada. O retorno é um booleano que indica se a execução do pipeline
+ * deve continuar ou não. E execução deve continuar enquanto houver instruções a serem
+ * executadas ou enquanto o pipeline não estiver parado.
+ */
 bool pipeline(cpu *c)
 {
     scoreboard *next_board = scoreboard_copy(c->bus->board);

@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <memory.h>
 
+/* scoreboard_init() inicializa o scoreboard, tendo como parâmetros o número de registradores
+ * e a configfuração do processador, os quais são adquiridos do cabeçalho do
+ * arquivo de entrada. Retorna um ponteiro para o scoreboard inicializado.
+ */
 scoreboard *scoreboard_init(int n_registers, config *cfg)
 {
     scoreboard *status = malloc(sizeof(scoreboard));
@@ -53,6 +57,10 @@ scoreboard *scoreboard_init(int n_registers, config *cfg)
     return status;
 }
 
+/* scoreboard_copy() copia o scoreboard passado como parâmetro, incluindo
+ * o estado das unidades funcionais, registradores e as devidas configurações,
+ * e o retorna
+ */
 scoreboard *scoreboard_copy(scoreboard *sb)
 {
     scoreboard *copy = malloc(sizeof(scoreboard));
@@ -73,6 +81,10 @@ scoreboard *scoreboard_copy(scoreboard *sb)
     return copy;
 }
 
+/* scoreboard_destroy() libera a memória alocada para o scoreboard passado como
+ * parâmetro.
+ */
+
 void scoreboard_destroy(scoreboard *status)
 {
     free(status->inst);
@@ -81,6 +93,10 @@ void scoreboard_destroy(scoreboard *status)
     free(status);
 }
 
+/* scoreboard_add_instruction() adiciona uma instrução ao scoreboard passado
+ * como parâmetro, tendo como parâmetro também o tipo da instrução. Retorna o
+ * índice da instrução adicionada.
+ */
 uint32_t scoreboard_add_instruction(scoreboard *sb, instruction_status is)
 {
     if (sb->inst_size == sb->inst_capacity)
@@ -92,6 +108,9 @@ uint32_t scoreboard_add_instruction(scoreboard *sb, instruction_status is)
     return sb->inst_size++;
 }
 
+/* scoreboard_get_instruction() retorna um ponteiro para a instrução de índice
+ * iid no scoreboard passado como parâmetro.
+ */
 instruction_status *scoreboard_get_instruction(scoreboard *sb, int iid)
 {
     if (iid < 0 || iid >= sb->inst_size)
@@ -101,6 +120,10 @@ instruction_status *scoreboard_get_instruction(scoreboard *sb, int iid)
     return &sb->inst[iid];
 }
 
+/* scoreboard_get_instruction_id() aumenta o número de instruções suportadas pelo
+ * scoreboard passado como parâmetro. O aumento é sempre dobrando a quantidade
+ * de instruções suportadas.
+ */
 void scoreboard_expand_instructions(scoreboard *sb)
 {
     if (sb->inst_capacity < 2)

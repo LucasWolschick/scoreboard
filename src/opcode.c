@@ -1,5 +1,8 @@
 #include "opcode.h"
 
+/*
+ * string_from_opcode recebe um opcode e retorna uma string com o nome do opcode.
+ */
 const char *string_from_opcode(opcode op)
 {
     switch (op)

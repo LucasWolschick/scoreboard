@@ -1,5 +1,9 @@
 #include "parser.h"
 
+
+/*
+ * next_char recebe um scanner e retorna o próximo caractere do scanner.
+ */
 char next_char(scanner *s)
 {
     char c = *s->current;
@@ -8,11 +12,17 @@ char next_char(scanner *s)
     return c;
 }
 
+/*
+ * peek_char recebe um scanner e retorna o próximo caractere do scanner sem avançar o scanner.
+ */
 char peek_char(const scanner *s)
 {
     return *s->current;
 }
 
+/*
+ * skip_whitespace recebe um scanner e avança o scanner até o próximo caractere não-branco.
+ */
 void skip_whitespace(scanner *s)
 {
     char c;
@@ -26,6 +36,10 @@ void skip_whitespace(scanner *s)
     }
 }
 
+/*
+ * scan_number recebe um scanner e retorna um token do tipo TOKEN_NUMBER.
+ * scaneando o tipo de número.
+ */
 token scan_number(scanner *s)
 {
     char ch;
@@ -51,6 +65,10 @@ token scan_number(scanner *s)
     return t;
 }
 
+
+/*
+ * cmp_token recebe um token e uma string e retorna True se o token e a string são iguais.
+ */
 bool cmp_token(token t, const char *s)
 {
     for (int i = 0; i < t.len; i++)
@@ -64,6 +82,10 @@ bool cmp_token(token t, const char *s)
     return s[t.len] == '\0';
 }
 
+/*
+ * make_token recebe um scanner e um tipo de token, retornando
+ * um token com o tipo especificado, o lexema do scanner e o número da linha.
+ */
 token make_token(const scanner *s, token_type type)
 {
     token t;
@@ -75,6 +97,9 @@ token make_token(const scanner *s, token_type type)
     return t;
 }
 
+/*
+ * make_error recebe um scanner e retorna um token de erro.
+ */
 token make_error(const scanner *s)
 {
     token t;
@@ -86,11 +111,17 @@ token make_error(const scanner *s)
     return t;
 }
 
+/*
+ * print_token recebe um token e um arquivo e imprime o lexema do token no arquivo.
+ */
 void print_token(token t, FILE *f)
 {
     fwrite(t.lexeme, sizeof *t.lexeme, t.len, f);
 }
 
+/*
+ * token_type_str recebe um tipo de token e retorna uma string com o nome do tipo de token.
+ */
 const char *token_type_str(token_type type)
 {
     switch (type)
@@ -127,6 +158,10 @@ const char *token_type_str(token_type type)
     return "?";
 }
 
+/*
+ * scan_section recebe um scanner e retorna um token do tipo TOKEN_SECTION.
+ * escaneando a seção fornecida.
+ */
 token scan_section(scanner *s)
 {
     char ch;
@@ -156,6 +191,10 @@ token scan_section(scanner *s)
     return t;
 }
 
+/*
+ * scan_identifier recebe um scanner e retorna um token do tipo TOKEN_IDENTIFIER.
+ * Ou seja, vai escanear um identificador e retornar o token correspondente.
+ */
 token scan_identifier(scanner *s)
 {
     char ch;
@@ -339,6 +378,9 @@ token scan_identifier(scanner *s)
     return t;
 }
 
+/*
+ * next_token recebe um scanner e retorna o próximo token do scanner.
+ */
 token next_token(scanner *s)
 {
     s->start = s->current;
@@ -434,6 +476,9 @@ token next_token(scanner *s)
     }
 }
 
+/*
+ * peek_token recebe um scanner e retorna o próximo token do scanner sem avançar o scanner.
+ */
 token peek_token(scanner *s)
 {
     scanner s2 = *s;

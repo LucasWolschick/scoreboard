@@ -16,6 +16,10 @@ typedef struct bus bus;
 struct sys_bus;
 typedef struct sys_bus sys_bus;
 
+
+/*
+ * Enum que representa o status do pipeline.
+ */
 enum pipeline_status
 {
     // executando normalmente
@@ -32,6 +36,10 @@ enum pipeline_status
 };
 typedef enum pipeline_status pipeline_status;
 
+
+/*
+ * Struct que contém toda a configuração da CPU
+ */
 typedef struct cpu
 {
     int ck;

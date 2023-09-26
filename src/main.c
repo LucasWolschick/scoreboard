@@ -12,6 +12,9 @@
 
 #define MIN_TAM_MEMO 100
 
+/*
+ * file_to_string recebe o caminho de um arquivo e retorna uma string com o conteúdo do arquivo.
+ */
 char *file_to_string(const char *path)
 {
     FILE *f = fopen(path, "rb");
@@ -34,6 +37,11 @@ char *file_to_string(const char *path)
     return buf;
 }
 
+
+/*
+ * main recebe os argumentos da linha de comando e executa o simulador.
+ * Uso: ./simulador -p <nome do programa> -m <tamanho da memória> [-o <nome do arquivo de saida>]
+ */
 int main(int argc, char *argv[])
 {
     if (argc < 5)

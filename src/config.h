@@ -3,6 +3,9 @@
 
 #include "opcode.h"
 
+/*
+ * Struct que contém a configuração das unidades funcionais e do processador.
+ */
 typedef struct config
 {
     // num de unidades funcionais

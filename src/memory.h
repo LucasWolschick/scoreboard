@@ -5,6 +5,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+
+/*
+ * Struct que contém as especificações da memória.
+ */
 typedef struct memory
 {
     uint32_t length;

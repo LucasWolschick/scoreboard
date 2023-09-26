@@ -13,6 +13,9 @@
 #include <errno.h>
 #include <stdbool.h>
 
+/*
+ * Struct que contém as informações necessárias para o scanner.
+ */
 typedef struct scanner
 {
     const char *start;
@@ -20,6 +23,9 @@ typedef struct scanner
     int line;
 } scanner;
 
+/*
+ * Enum que contém os tipos de tokens possíveis.
+ */
 typedef enum token_type
 {
     // um caractere
@@ -45,6 +51,9 @@ typedef enum token_type
     TOKEN_ERRO,
 } token_type;
 
+/*
+ * Struct que contém as informações de um token.
+ */
 typedef struct token
 {
     token_type type;
@@ -54,6 +63,9 @@ typedef struct token
     int line;
 } token;
 
+/*
+ * Enum que contém os nomes das seções possíveis.
+ */
 typedef enum section_name
 {
     SECTION_DATA,

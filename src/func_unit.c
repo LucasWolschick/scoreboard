@@ -1,11 +1,21 @@
 #include "func_unit.h"
 
+
+/*
+ * uf_load_instruction recebe uma unidade funcional e uma instrução, com isso,
+ * carrega uma instrução na unidade funcional.
+ */
 void uf_load_instruction(uf *u, uint32_t instruction)
 {
     u->instruction = instruction;
     u->res = 0;
 }
 
+/*
+ * uf_load_ops recebe um struct bus, que contém o barramento, um struct sys_bus, que 
+ * contém o barramento do sistema e uma unidade funcional, com isso, carrega os operandos 
+ * das unidades funcionais.
+ */
 void uf_load_ops(uf *u, bus *b, sys_bus *sb)
 {
     // determina de onde ler
@@ -124,6 +134,12 @@ void uf_load_ops(uf *u, bus *b, sys_bus *sb)
     }
     }
 }
+
+/*
+ * uf_write_res recebe um struct bus, que contém o barramento, um struct sys_bus, que
+ * contém o barramento do sitema, e uma unidade funcional, tendo como objetivo, escrever
+ * os resultados das unidades funcionais.
+ */
 void uf_write_res(uf *u, bus *b, sys_bus *sb)
 {
     uint32_t opcode = u->instruction >> 26;

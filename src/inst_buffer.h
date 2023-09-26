@@ -7,6 +7,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+
+/*
+ * Struct que contém todas as especificações de um buffer de instruções.
+ */
 typedef struct inst_buffer
 {
     size_t capacity;

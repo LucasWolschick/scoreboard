@@ -1,6 +1,9 @@
 #ifndef OPCODE_H
 #define OPCODE_H
 
+/*
+ * Enum que contém todos os opcodes possíveis.
+ */
 typedef enum opcode
 {
     OP_ADD,

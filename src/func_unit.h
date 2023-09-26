@@ -14,6 +14,9 @@ typedef struct bus bus;
 struct sys_bus;
 typedef struct sys_bus sys_bus;
 
+/*
+ * Struct que representa uma unidade funcional.
+ */
 typedef struct uf
 {
     uint32_t instruction;

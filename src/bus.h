@@ -22,6 +22,10 @@ typedef struct uf uf;
 struct scoreboard;
 typedef struct scoreboard scoreboard;
 
+
+/*
+ * struct bus representa o barramento, que é o componente que conecta todos os componentes do Scoreboard.
+ */
 typedef struct bus
 {
     cpu *cpu;

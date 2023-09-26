@@ -53,13 +53,13 @@ void uf_load_ops(uf *u, bus *b, sys_bus *sb)
     }
     case OP_DIV:
     {
-        uint32_t divisor = bus_read_reg(b, rt);
+        int32_t divisor = (int32_t)bus_read_reg(b, rt);
         if (divisor == 0)
         {
             fprintf(stderr, "Erro: divisao por zero! Abortando\n");
             exit(1);
         }
-        u->res = bus_read_reg(b, rs) / divisor;
+        u->res = (int32_t)bus_read_reg(b, rs) / divisor;
         break;
     }
     case OP_AND:
@@ -79,25 +79,25 @@ void uf_load_ops(uf *u, bus *b, sys_bus *sb)
     }
     case OP_BLT:
     {
-        u->res = bus_read_reg(b, rs) < bus_read_reg(b, rt);
+        u->res = (int32_t)bus_read_reg(b, rs) < (int32_t)bus_read_reg(b, rt);
         u->res2 = bus_read_pc(b) + 4 + imm;
         break;
     }
     case OP_BGT:
     {
-        u->res = bus_read_reg(b, rs) > bus_read_reg(b, rt);
+        u->res = (int32_t)bus_read_reg(b, rs) > (int32_t)bus_read_reg(b, rt);
         u->res2 = bus_read_pc(b) + 4 + imm;
         break;
     }
     case OP_BEQ:
     {
-        u->res = bus_read_reg(b, rs) == bus_read_reg(b, rt);
+        u->res = (int32_t)bus_read_reg(b, rs) == (int32_t)bus_read_reg(b, rt);
         u->res2 = bus_read_pc(b) + 4 + imm;
         break;
     }
     case OP_BNE:
     {
-        u->res = bus_read_reg(b, rs) != bus_read_reg(b, rt);
+        u->res = (int32_t)bus_read_reg(b, rs) != (int32_t)bus_read_reg(b, rt);
         u->res2 = bus_read_pc(b) + 4 + imm;
         break;
     }
@@ -107,15 +107,15 @@ void uf_load_ops(uf *u, bus *b, sys_bus *sb)
     }
     case OP_LW:
     {
-        size_t offset = bus_read_reg(b, rs) + imm;
+        size_t offset = (int32_t)bus_read_reg(b, rs) + imm;
         uint32_t res = sys_bus_read_memory_word(sb, offset);
         u->res = res;
         break;
     }
     case OP_SW:
     {
-        u->res = bus_read_reg(b, rt);
-        u->res2 = bus_read_reg(b, rs) + imm;
+        u->res = (int32_t)bus_read_reg(b, rt);
+        u->res2 = (int32_t)bus_read_reg(b, rs) + imm;
         break;
     }
     case OP_EXIT:

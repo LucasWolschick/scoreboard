@@ -13,5 +13,6 @@ void print_tables_ufs(scoreboard *sb, register_bank *regs);
 void print_tables_regs(scoreboard *sb);
 void print_tables_regs_f(scoreboard *sb, register_bank *r);
 void print_tables(scoreboard *sb, register_bank *regs);
+void print_memory(memory *m);
 
 #endif

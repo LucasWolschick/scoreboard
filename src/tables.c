@@ -152,13 +152,13 @@ void print_tables_ufs(scoreboard *sb, register_bank *regs)
             switch (sb->uf[sb->uf[i].qj].type)
             {
             case FU_ADD:
-                printf("  Add%-3d |", sb->uf[i].n_type + 1);
+                printf("  Add%-3d |", sb->uf[sb->uf[i].qj].n_type + 1);
                 break;
             case FU_MUL:
-                printf("  Mul%-3d |", sb->uf[i].n_type + 1);
+                printf("  Mul%-3d |", sb->uf[sb->uf[i].qj].n_type + 1);
                 break;
             case FU_INT:
-                printf("  Int%-3d |", sb->uf[i].n_type + 1);
+                printf("  Int%-3d |", sb->uf[sb->uf[i].qj].n_type + 1);
             }
         }
         if (!busy || sb->uf[i].qk == -1)
@@ -170,13 +170,13 @@ void print_tables_ufs(scoreboard *sb, register_bank *regs)
             switch (sb->uf[sb->uf[i].qk].type)
             {
             case FU_ADD:
-                printf("  Add%-3d |", sb->uf[i].n_type + 1);
+                printf("  Add%-3d |", sb->uf[sb->uf[i].qk].n_type + 1);
                 break;
             case FU_MUL:
-                printf("  Mul%-3d |", sb->uf[i].n_type + 1);
+                printf("  Mul%-3d |", sb->uf[sb->uf[i].qk].n_type + 1);
                 break;
             case FU_INT:
-                printf("  Int%-3d |", sb->uf[i].n_type + 1);
+                printf("  Int%-3d |", sb->uf[sb->uf[i].qk].n_type + 1);
             }
         }
 
@@ -235,10 +235,24 @@ void print_tables_regs_f(scoreboard *sb, register_bank *r)
     for (int i = 0; i < N_REGISTERS; i++)
     {
         printf("|  R%-2d |", i);
-        printf(" %16s |", register_read(r, i));
+        printf(" %16d |", register_read(r, i));
         printf("\n");
     }
     printf("*------*------------------*\n");
+    printf("\n");
+}
+
+void print_memory(memory *m)
+{
+    for (int i = 0; i < m->length; i++)
+    {
+        if (i % 16 == 0)
+        {
+            printf("\n");
+            printf("%08x: ", i);
+        }
+        printf("%02x ", memory_read(m, i));
+    }
     printf("\n");
 }
 

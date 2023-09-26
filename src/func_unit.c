@@ -28,27 +28,27 @@ void uf_load_ops(uf *u, bus *b, sys_bus *sb)
     {
     case OP_ADD:
     {
-        u->res = bus_read_reg(b, rs) + bus_read_reg(b, rt);
+        u->res = (int32_t)bus_read_reg(b, rs) + (int32_t)bus_read_reg(b, rt);
         break;
     }
     case OP_ADDI:
     {
-        u->res = bus_read_reg(b, rs) + imm;
+        u->res = (int32_t)bus_read_reg(b, rs) + imm;
         break;
     }
     case OP_SUB:
     {
-        u->res = bus_read_reg(b, rs) - bus_read_reg(b, rt);
+        u->res = (int32_t)bus_read_reg(b, rs) - (int32_t)bus_read_reg(b, rt);
         break;
     }
     case OP_SUBI:
     {
-        u->res = bus_read_reg(b, rs) - imm;
+        u->res = (int32_t)bus_read_reg(b, rs) - imm;
         break;
     }
     case OP_MUL:
     {
-        u->res = bus_read_reg(b, rs) * bus_read_reg(b, rt);
+        u->res = (int32_t)bus_read_reg(b, rs) * (int32_t)bus_read_reg(b, rt);
         break;
     }
     case OP_DIV:

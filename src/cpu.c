@@ -234,7 +234,7 @@ void issue(cpu *c, scoreboard *board)
     case OP_NOT:
         d = rd;
         s1 = rs;
-        s2 = 0;
+        s2 = -1;
         i_type = FU_INT;
         break;
 
@@ -428,19 +428,19 @@ void write_results(cpu *c, scoreboard *board)
         }
 
         // escreve o resultado
-        for (int f = 0; f < (c->cfg.n_uf_add + c->cfg.n_uf_int + c->cfg.n_uf_mul); f++)
-        {
-            uf_status *f_uf_status = &board->uf[f];
+        // for (int f = 0; f < (c->cfg.n_uf_add + c->cfg.n_uf_int + c->cfg.n_uf_mul); f++)
+        // {
+        //     uf_status *f_uf_status = &board->uf[f];
 
-            if (inst.uf != -1 && f_uf_status->qj == inst.uf)
-            {
-                f_uf_status->rj = true;
-            }
-            if (inst.uf != -1 && f_uf_status->qk == inst.uf)
-            {
-                f_uf_status->rk = true;
-            }
-        }
+        //     if (inst.uf != -1 && f_uf_status->qj == inst.uf)
+        //     {
+        //         f_uf_status->rj = true;
+        //     }
+        //     if (inst.uf != -1 && f_uf_status->qk == inst.uf)
+        //     {
+        //         f_uf_status->rk = true;
+        //     }
+        // }
 
         bus_func_unit_write_res(c->bus, inst.uf, c->sys_bus);
 
@@ -455,6 +455,97 @@ void write_results(cpu *c, scoreboard *board)
             c->pipeline_status = PIPELINE_UNSTALL;
             break;
         }
+
+        // limpa
+        // int reg_target = bus_sb_get_func_unit_status(c->bus, inst.uf)->fi;
+        // if (reg_target != -1)
+        //     board->regs[reg_target].uf = -1;
+
+        // board->uf[inst.uf] = (uf_status){
+        //     .busy = false,
+        //     .op = -1,
+        //     .type = bus_sb_get_func_unit_status(c->bus, inst.uf)->type,
+
+        //     .fi = -1,
+        //     .fj = -1,
+        //     .fk = -1,
+
+        //     .qj = -1,
+        //     .qk = -1,
+
+        //     .rj = false,
+        //     .rk = false};
+
+        // instruction_status *inst_s = &board->inst[i];
+        // inst_s->st = STAGE_DONE;
+        // inst_s->when[STAGE_WRITE_RESULTS] = c->ck;
+    }
+}
+
+void write_results_2(cpu *c, scoreboard *board)
+{
+    size_t n_insts = bus_sb_n_instructions(c->bus);
+    for (int i = 0; i < n_insts; i++)
+    {
+        instruction_status inst = *bus_sb_get_instruction(c->bus, i);
+
+        if (inst.st != STAGE_WRITE_RESULTS)
+        {
+            continue;
+        }
+
+        uf_status *uf_uf_status = bus_sb_get_func_unit_status(c->bus, inst.uf);
+
+        // verifica a condição
+        bool condition = true;
+
+        for (int f = 0; f < c->bus->board->n_ufs; f++)
+        {
+            uf_status *f_uf_status = bus_sb_get_func_unit_status(c->bus, f);
+            if (uf_uf_status->fi != -1)
+            {
+                if (!((f_uf_status->fj != uf_uf_status->fi || f_uf_status->rj == false) &&
+                      (f_uf_status->fk != uf_uf_status->fi || f_uf_status->rk == false)))
+                {
+                    condition = false;
+                    break;
+                }
+            }
+        }
+
+        if (!condition)
+        {
+            continue;
+        }
+
+        // escreve o resultado
+        for (int f = 0; f < (c->cfg.n_uf_add + c->cfg.n_uf_int + c->cfg.n_uf_mul); f++)
+        {
+            uf_status *f_uf_status = &board->uf[f];
+
+            if (inst.uf != -1 && f_uf_status->qj == inst.uf)
+            {
+                f_uf_status->rj = true;
+            }
+            if (inst.uf != -1 && f_uf_status->qk == inst.uf)
+            {
+                f_uf_status->rk = true;
+            }
+        }
+
+        // bus_func_unit_write_res(c->bus, inst.uf, c->sys_bus);
+
+        // // resolve o stall no caso da instrução ser um branch condicional
+        // int opcode = inst.instruction >> 26;
+        // switch (opcode)
+        // {
+        // case OP_BLT:
+        // case OP_BEQ:
+        // case OP_BGT:
+        // case OP_BNE:
+        //     c->pipeline_status = PIPELINE_UNSTALL;
+        //     break;
+        // }
 
         // limpa
         int reg_target = bus_sb_get_func_unit_status(c->bus, inst.uf)->fi;
@@ -491,6 +582,7 @@ bool pipeline(cpu *c)
     read_operands(c, next_board);
     issue(c, next_board);
     fetch(c, next_board);
+    write_results_2(c, next_board);
 
     scoreboard_destroy(c->bus->board);
     c->bus->board = next_board;

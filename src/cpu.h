@@ -54,6 +54,7 @@ void issue(cpu *c, scoreboard *board);
 void read_operands(cpu *c, scoreboard *board);
 void execution_complete(cpu *c, scoreboard *board);
 void write_results(cpu *c, scoreboard *board);
+void write_results_2(cpu *c, scoreboard *board);
 bool pipeline(cpu *c);
 
 int snprint_instruction(uint32_t instruction, char *buffer, size_t bufsz);

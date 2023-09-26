@@ -747,6 +747,7 @@ void data_entry(scanner *s, vector *v)
     {
         next_token(s);
         token n = expect_token(s, TOKEN_NUMBER);
+        n.value = -n.value;
         vector_push(v, n.value);
 
         data_entry(s, v);

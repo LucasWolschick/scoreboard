@@ -1,0 +1,45 @@
+/*
+    UF:
+    inteiro:3
+    add:1
+    mul:3
+    INST:
+    lw: 1
+    mul: 1
+    sub: 1
+    div: 1
+    add: 1
+*/
+
+.data
+    16
+.text
+    # r1 contém o número testado
+    # r2 contém i
+    # r3 contém quot
+    # r4 contém prod
+    # r5 contém rem
+    # r6 contém r1 - 1
+    # r11 contém a constante 1
+
+    # r7 contém 1 se o número for primo e 0 caso contrário
+
+    lw r1, 0(r0)
+    addi r11, r0, 1
+    subi r6, r1, 1
+	blt r1, r11, 40 #false
+	addi r2, r0, 2
+#loop:
+	bgt r2, r6, 24 #endloop
+	div r3, r1, r2
+	mul r4, r3, r2
+	sub r5, r1, r4
+	beq r5, r0, 16 # false
+	addi r2, r2, 1
+    j 120 #loop
+#endloop:
+	addi r7, r0, 1
+	exit
+#false:
+	addi r7, r0, 0
+	exit

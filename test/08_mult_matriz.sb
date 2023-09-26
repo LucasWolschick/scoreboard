@@ -1,0 +1,102 @@
+/*
+    UF:
+    inteiro:3
+    add:1
+    mul:3
+    INST:
+    lw: 1
+    mul: 1
+    sub: 1
+    div: 1
+    add: 1
+*/
+
+.data
+    # ordem da matriz
+    3
+
+    # M1
+    3 0 1
+    0 10 0
+    2 0 -2
+
+    # M2
+    1 2 3
+    4 5 6
+    7 8 9
+
+    # resultado é escrito nas posições 500-536
+
+.text
+    # r13 possui a ordem da matriz
+    # r14 contém a constante 4
+    # r1 possui a variável i
+    # r2 possui a variável j
+    # r3 possui a variável sum
+    # r4 possui a variável k
+    # r5 possui a variável addr1
+    # r6 possui a variável addr2
+    # r7 possui a variável val1
+    # r8 possui a variável val2
+    # r9 possui a variável prod
+    # r10 possui a variável addr3
+    # r11 possui o offset para a segunda matriz
+    # r12 possui a base
+
+    lw r13, 0(r0)
+    addi r14, r0, 4
+    mul r11, r13, r13
+    mul r11, r11, r14
+    addi r11, r11, 4
+
+    addi r1, r0, 0
+#start1:
+    beq r1, r13, 104 # end1
+    addi r2, r0, 0
+#start2:
+    beq r2, r13, 88 # end2
+    addi r3, r0, 0
+    addi r4, r0, 0
+#start3:
+    # if k != 3
+    beq r4, r13, 52 # end3
+    
+    # addr1 = (i + k*n) * 4
+    mul r5, r1, r13
+    add r5, r5, r4
+    mul r5, r5, r14
+    
+    # addr2 = (k + j*n) * 4
+    mul r6, r4, r13
+    add r6, r6, r2
+    mul r6, r6, r14
+    
+    # prod = M1[addr1] + M2[addr2]
+    lw r7, 4(r5)
+    add r12, r11, r6
+    lw r8, 0(r12)
+    mul r9, r7, r8
+    
+    # sum = sum + prod
+    add r3, r3, r9
+    
+    # k = k + 1
+    addi r4, r4, 1
+    
+    j 144 # start3
+#end3:
+    # addr3 = (i + j*n) * 4
+    mul r10, r1, r13
+    add r10, r10, r2
+    mul r10, r10, r14
+    
+    sw r3, 500(r10)
+    
+    addi r2, r2, 1
+    
+    j 132 # start2
+#end2:
+    addi r1, r1, 1
+    j 124 # start1
+#end1:
+    exit

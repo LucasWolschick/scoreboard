@@ -775,7 +775,7 @@ config comment(scanner *s)
     c.n_uf_add = 1;
     c.n_uf_int = 1;
     c.n_uf_mul = 1;
-    c.ufs_per_group = 1;
+    c.ufs_per_group = N_UF_PER_GROUP;
     for (opcode o = OP_ADD; o < OP_EXIT; o++)
     {
         c.ck_instruction[o] = 1;

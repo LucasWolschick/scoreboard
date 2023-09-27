@@ -1,7 +1,4 @@
 #include "tables.h"
-#include "opcode.h"
-#include "register.h"
-#include "cpu.h"
 
 /* print_tables_instruction() recebe como parâmetro um scoreboard e imprime a
  * tabela de instruções com base no estado atual do scoreboard.

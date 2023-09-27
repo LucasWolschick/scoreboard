@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define N_REGISTERS 32
+#include "consts.h"
 
 /*
  * Struct que contém o banco de registradores.

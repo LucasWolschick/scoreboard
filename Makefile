@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -Werror -fsanitize=address -fsanitize=undefined -fanalyzer -pedantic -std=c17
+CFLAGS = -g -Wall -Werror -pedantic -std=c11
 
 SOURCES = $(wildcard src/*.c)
 HEADERS = $(wildcard src/*.h)

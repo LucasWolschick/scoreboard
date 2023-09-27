@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "consts.h"
 #include "parser.h"
 #include "cpu.h"
 #include "bus.h"
@@ -10,7 +11,18 @@
 #include "func_unit.h"
 #include "tables.h"
 
-#define MIN_TAM_MEMO 100
+/**
+ * SIMULADOR DE SCOREBOARDING
+ * Universidade Estadual de Maringá
+ * Arquitetura e Organização de Computadores II
+ *
+ * Para instruções de uso e compilação, vide README.md
+ *
+ * Autores:
+ * - Guilherme Frare Clemente (ra124349@uem.br)
+ * - Lucas Wolschick (ra123658@uem.br)
+ * - Marcos Vinícius de Oliveira (ra124408@uem.br)
+ */
 
 /*
  * file_to_string recebe o caminho de um arquivo e retorna uma string com o conteúdo do arquivo.
@@ -36,7 +48,6 @@ char *file_to_string(const char *path)
 
     return buf;
 }
-
 
 /*
  * main recebe os argumentos da linha de comando e executa o simulador.

@@ -1,6 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "consts.h"
 #include "vector.h"
 #include "opcode.h"
 #include "config.h"

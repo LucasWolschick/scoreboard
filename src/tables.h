@@ -4,9 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "consts.h"
 #include "register.h"
 #include "cpu.h"
 #include "scoreboard.h"
+#include "tables.h"
+#include "opcode.h"
+#include "register.h"
+#include "cpu.h"
 
 void print_tables_instruction(scoreboard *sb);
 void print_tables_ufs(scoreboard *sb, register_bank *regs);

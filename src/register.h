@@ -6,6 +6,10 @@
 
 #define N_REGISTERS 32
 
+/*
+ * Struct que contém o banco de registradores.
+ */
+
 typedef struct register_bank
 {
     uint32_t regs[N_REGISTERS];

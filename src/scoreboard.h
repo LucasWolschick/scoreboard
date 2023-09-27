@@ -8,6 +8,10 @@
 #include "opcode.h"
 #include "config.h"
 
+
+/*
+ * Enum que contém os tipos de unidades funcionais.
+ */
 typedef enum fu_type
 {
     FU_ADD,
@@ -15,6 +19,10 @@ typedef enum fu_type
     FU_INT,
 } fu_type;
 
+
+/*
+ * Struct que contém as informações (status) de uma unidade funcional.
+ */
 typedef struct uf_status
 {
     bool busy;
@@ -35,11 +43,19 @@ typedef struct uf_status
     bool rk;
 } uf_status;
 
+
+/*
+ * Struct que contém as informações (status) de um registrador.
+ */
 typedef struct reg_status
 {
     int uf;
 } reg_status;
 
+
+/*
+ * Enum que contém os estágios de uma instrução.
+ */
 typedef enum stage
 {
     STAGE_FETCH,
@@ -50,6 +66,10 @@ typedef enum stage
     STAGE_DONE,
 } stage;
 
+
+/*
+ * Struct que contém as informações (status) de uma instrução.
+ */
 typedef struct instruction_status
 {
     // instrução
@@ -65,6 +85,10 @@ typedef struct instruction_status
     int when[STAGE_DONE + 1];
 } instruction_status;
 
+
+/*
+ * Struct que contém as informações (status) do scoreboard.
+ */
 typedef struct scoreboard
 {
     instruction_status *inst;

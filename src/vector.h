@@ -8,6 +8,10 @@
 
 #define VECTOR_TYPE uint32_t
 
+
+/*
+ * Struct que contém um vetor dinâmico.
+ */
 typedef struct vector
 {
     size_t capacity;

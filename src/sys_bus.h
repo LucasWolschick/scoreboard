@@ -7,6 +7,10 @@
 struct cpu;
 typedef struct cpu cpu;
 
+
+/*
+ * Struct que contém o barramento do sistema.
+ */
 typedef struct sys_bus
 {
     memory *memory;

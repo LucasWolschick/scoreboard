@@ -1,6 +1,5 @@
 #include "memory.h"
 
-
 /*
  * memory_init inicializa uma memória com um tamanho especificado.
  * Retorna um ponteiro para a memória.
@@ -21,7 +20,6 @@ void memory_destroy(memory *m)
     free(m->data);
     free(m);
 }
-
 
 /*
  * memory_read recebe um ponteiro para uma memória e um endereço de memória de 32 bits (sem sinal).
@@ -62,9 +60,8 @@ uint32_t memory_read_word(memory *m, uint32_t address)
         fprintf(stderr, "Leitura fora do espaco de memoria; abortando\n");
         exit(1);
     }
-    return (m->data[address] << 24) | (m->data[address + 1] << 16) | (m->data[address + 2] << 8) | m->data[address + 3];
+    return ((uint32_t)m->data[address] << 24U) | ((uint32_t)m->data[address + 1] << 16U) | ((uint32_t)m->data[address + 2] << 8U) | (uint32_t)m->data[address + 3];
 }
-
 
 /*
  * memory_write_word recebe um ponteiro para uma memória, um endereço de memória de 32 bits (sem sinal) e

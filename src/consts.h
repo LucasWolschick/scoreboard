@@ -8,6 +8,6 @@
 #define MIN_TAM_MEMO 100
 
 // Número de unidades funcionais por grupo de unidades funcionais.
-#define N_UF_PER_GROUP 2
+#define N_UF_PER_GROUP 1
 
 #endif
